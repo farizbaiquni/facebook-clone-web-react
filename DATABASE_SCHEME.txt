@@ -1,0 +1,10 @@
+
+USERS 
+first_name, last_name, email, birth_date, photo_profile, gender, create-at, friends[]
+
+POSTS  
+id_user, access_type, access_members[], photo, name, create-at, post, like[], COMMENTS
+
+COMMENTS
+name, comment, like[], create_at
+
