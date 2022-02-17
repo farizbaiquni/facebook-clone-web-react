@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import Modal from 'react-modal';
+import { getAuth, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, EmailAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
+import { FirebaseContext } from '../contexts/firebaseContext';
 
 const customStyles = {
     overlay: {
@@ -16,10 +18,54 @@ const customStyles = {
 };
 
 
+
 export const SignIn = () => {
+    useContext(FirebaseContext)
     const [modalIsOpen, setIsOpen] = React.useState(false);
     const openModal = () => setIsOpen(true)
     const closeModal = () => setIsOpen(false)
+
+    const auth = getAuth()
+ 
+    const handleSignUp = async () => {
+        await createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                // const user = userCredential.user;
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                alert(errorMessage + "Error Code : " + errorCode )
+            })
+    }
+
+    const handleEmailExist = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        await fetchSignInMethodsForEmail( auth, email)
+            .then((signInMethods) => {
+                if (signInMethods.indexOf(EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD) != -1) {
+                    alert("Email Exist")
+                }else{
+                    handleSignUp()
+                }
+            })
+            .catch((error) => {
+                alert(error)
+            })
+    }
+
+    const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        await signInWithEmailAndPassword(auth, loginEmail, loginPassword)
+            .then((userCredential) => {
+                // const user = userCredential.user;
+                alert("login success")
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+            });
+    }
 
     //Form input
     const [firstName, setFirstName] = React.useState("")
@@ -28,6 +74,9 @@ export const SignIn = () => {
     const [password, setPassword] = React.useState("")
     const [birthDate, setBirthDate] = React.useState("")
     const [gender, setGender] = React.useState("")
+
+    const [loginEmail, setLoginEmail] = React.useState("")
+    const [loginPassword, setLoginPassword] = React.useState("")
 
     const [clickedInput, setClickedInput] = React.useState({
         firstName: false,
@@ -65,13 +114,14 @@ export const SignIn = () => {
             </div>
 
             <div className="right_side">
-                <form action="" className='w-500 border-2 border-slate-300 pt-14 pb-8 px-5 rounded-md'>
+                <form action="" className='w-500 border-2 border-slate-300 pt-14 pb-8 px-5 rounded-md' onSubmit={ e => handleLogin(e)}>
 
-                    <input typeof='email    ' id="name-with-label" className="rounded-md border-transparent flex-1 appearance-none border border-gray-300 w-full py-3 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent" name="email" placeholder="Email address or phone number"/>
-                    <input typeof='password' id="name-with-label" className="rounded-md border-transparent flex-1 appearance-none border border-gray-300 w-full py-3 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent mt-3" name="email" placeholder="Password"/>
+                    <input typeof='email' id="inputEmail" className="rounded-md border-transparent flex-1 appearance-none border border-gray-300 w-full py-3 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent" name="email" placeholder="Email address or phone number"onChange={(event) => setLoginEmail(event.target.value)} />
+
+                    <input typeof='password' type="password" id="inputPassword" className="rounded-md border-transparent flex-1 appearance-none border border-gray-300 w-full py-3 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent mt-3" name="password" placeholder="Password" onChange={ (event) => setLoginPassword(event.target.value)}/>
 
                     
-                    <button type="button" className="py-3 px-4 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-indigo-200 text-white text-lg font-bold w-full transition ease-in duration-200 text-center shadow-md focus:outline-none focus:0 ring-2 focus:ring-offset-2 rounded-lg mt-5">
+                    <button type="submit" className="py-3 px-4 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-indigo-200 text-white text-lg font-bold w-full transition ease-in duration-200 text-center shadow-md focus:outline-none focus:0 ring-2 focus:ring-offset-2 rounded-lg mt-5">
                         Log In
                     </button>
 
@@ -86,6 +136,7 @@ export const SignIn = () => {
             </div>            
 
 
+            
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
@@ -93,7 +144,13 @@ export const SignIn = () => {
                 contentLabel="Sign Up"
                 ariaHideApp={false}
             >    
-                <form action="form-sign-up" className='flex flex-col'>
+                <form action="form-sign-up" className='flex flex-col' onSubmit={ (e) => {
+                        if (firstName.length <= 0 || lastName.length <= 0 || email.length <= 0 || password.length <= 0 || birthDate.length <= 0 || gender.length <= 0) {
+                            setClickedInput({...clickedInput, firstName: true, lastName: true, email: true, password: true, birthDate: true, gender: true,})
+                        } else {
+                            handleEmailExist(e)
+                        }
+                    }}>
                     <h1 className='text-3xl font-semibold'>Sign Up</h1>
                     <h2 className=' text-sm mt-1 text-gray-500'>It's quick and easy.</h2>
 
@@ -102,7 +159,7 @@ export const SignIn = () => {
                     <div className='flex'>
                         {/* first name */}
                         <div className=" relative ">
-                            <input type="text" className={`ring-gray-300 ring-1 rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-1 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent ${(firstName.length <= 0 && clickedInput.firstName === true && focusInput.firstName === false) && 'border-red-500'}`} name="email" placeholder="First name" value={`${firstName}`} onChange={(event) => setFirstName(event.target.value)} onFocus={() => { 
+                            <input type="text" className={`ring-gray-300 ring-1 rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-1 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent ${(firstName.length <= 0 && clickedInput.firstName === true && focusInput.firstName === false) && 'border-red-500'}`} autoComplete='off' name="email" placeholder="First name" value={`${firstName}`} onChange={(event) => setFirstName(event.target.value)} onFocus={() => { 
                                 setFocusInput({...templateFocusFalse, firstName: true}); 
                                 !clickedInput.firstName && setClickedInput({...clickedInput, firstName: true})
                                 }}/>
@@ -116,7 +173,7 @@ export const SignIn = () => {
 
                         {/* surname */}
                         <div className=" ml-2 relative ">
-                            <input type="text" className={`ring-gray-300 ring-1 rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-1 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent ${ (lastName.length <= 0 && clickedInput.lastName === true && focusInput.lastName === false) && 'border-red-500'}`} name="email" placeholder="Surname" value={`${lastName}`} onChange={(event) => setLastName(event.target.value)} onFocus={() => {
+                            <input type="text" className={`ring-gray-300 ring-1 rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-1 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent ${ (lastName.length <= 0 && clickedInput.lastName === true && focusInput.lastName === false) && 'border-red-500'}`} autoComplete='off' name="email" placeholder="Surname" value={`${lastName}`} onChange={(event) => setLastName(event.target.value)} onFocus={() => {
                                 setFocusInput({...templateFocusFalse, lastName: true})
                                 !clickedInput.lastName && setClickedInput({...clickedInput, lastName: true})
                                 }}/>
@@ -131,7 +188,7 @@ export const SignIn = () => {
 
                     {/* email */}
                     <div className=" relative mt-8">
-                        <input type="text" className={`ring-gray-300 ring-1 rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-1 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent ${(email.length <= 0 && clickedInput.email === true && focusInput.email === false) && 'border-red-500'}`} name="email" placeholder="Email address" value={`${email}`} onChange={(event) => setEmail(event.target.value)} onFocus={() => { 
+                        <input type="text" className={`ring-gray-300 ring-1 rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-1 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent ${(email.length <= 0 && clickedInput.email === true && focusInput.email === false) && 'border-red-500'}`} name="email" placeholder="Email address" autoComplete='off' value={`${email}`} onChange={(event) => setEmail(event.target.value)} onFocus={() => { 
                             setFocusInput({...templateFocusFalse, email: true}); 
                             !clickedInput.email && setClickedInput({...clickedInput, email: true})
                             }}/>
@@ -143,9 +200,23 @@ export const SignIn = () => {
                         </span>       
                     </div>
 
+                    {/* password */}
+                    <div className=" relative mt-8">
+                        <input type="password" className={`ring-gray-300 ring-1 rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-1 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent ${(password.length <= 0 && clickedInput.password === true && focusInput.password === false) && 'border-red-500'}`} name="password" autoComplete='off' placeholder="New password" value={`${password}`} onChange={(event) => setPassword(event.target.value)} onFocus={() => { 
+                            setFocusInput({...templateFocusFalse, password: true}); 
+                            !clickedInput.password && setClickedInput({...clickedInput, password: true})
+                            }}/>
+                        <span className={`${(password.length <= 0 && clickedInput.password === true && focusInput.password === false) ? 'block' : 'hidden'}`}>
+                            <InvalidInputIcon />
+                            <p className="absolute left-2 text-sm text-red-500 -bottom-5">
+                                Cannot be empty
+                            </p>
+                        </span>       
+                    </div>
+
                     {/* date of birth */}
                     <div className=" relative mt-8">
-                        <input type="date" className={`ring-gray-300 ring-1 rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-1 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent ${(email.length <= 0 && clickedInput.birthDate === true && focusInput.birthDate === false) && 'border-red-500'}`} name="birthDate" placeholder="Date of Birth" value={`${birthDate}`} onChange={(event) => setBirthDate(event.target.value)} onFocus={() => { 
+                        <input type="date" className={`ring-gray-300 ring-1 rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-1 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent ${(email.length <= 0 && clickedInput.birthDate === true && focusInput.birthDate === false) && 'border-red-500'}`} name="birthDate" autoComplete='off' placeholder="Date of Birth" value={`${birthDate}`} onChange={(event) => setBirthDate(event.target.value)} onFocus={() => { 
                             setFocusInput({...templateFocusFalse, birthDate: true}); 
                             !clickedInput.birthDate && setClickedInput({...clickedInput, birthDate: true})
                             }}/>
@@ -157,17 +228,17 @@ export const SignIn = () => {
                         </span>       
                     </div>
 
-                    {/* date of birth */}
+                    {/* gender */}
                     <div className=" relative mt-8 px-4">
                     <label className="inline-flex items-center">
-                        <input type="radio" name="vehicle" className="h-5 w-5 text-red-600"/>
+                        <input type="radio" name="gender" value='male' className="h-5 w-5 text-red-600" onClick={()=>setGender('male')}/>
                         <span className="ml-2 text-gray-700">
                             Male
                         </span>
                     </label>
 
                     <label className="inline-flex items-center ml-5">
-                        <input type="radio" name="vehicle" className="h-5 w-5 text-red-600"/>
+                        <input type="radio" name="gender" value='female' className="h-5 w-5 text-red-600" onClick={()=>setGender('female')}/>
                         <span className="ml-2 text-gray-700">
                             Female
                         </span>
@@ -180,9 +251,9 @@ export const SignIn = () => {
                         </span>       
                     </div>
 
-                    <p className=' break-words max-w-md text-xs mt-3 text-gray-600'>By clicking Sign Up, you agree to our Terms, Data Policy and Cookie Policy. You may receive SMS notifications from us and can opt out at any time </p>
+                    <p className=' break-words max-w-md text-xs mt-7 text-gray-600'>By clicking Sign Up, you agree to our Terms, Data Policy and Cookie Policy. You may receive SMS notifications from us and can opt out at any time </p>
 
-                    <button type="button" className="py-1 px-16 max-w-fit bg-green-600 hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-indigo-200 text-white text-lg mx-auto font-bold transition ease-in duration-200 text-center shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg mt-9" onClick={openModal}>
+                    <button type="submit" className="py-1 px-16 max-w-fit bg-green-600 hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-indigo-200 text-white text-lg mx-auto font-bold transition ease-in duration-200 text-center shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg mt-9" >
                         Sign Up
                     </button>
 
