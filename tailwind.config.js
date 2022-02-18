@@ -43,6 +43,10 @@ module.exports = {
 
         'max-sm': {'max': '639px'},
         // => @media (max-width: 639px) { ... }
+      },
+
+      gridTemplateRows: {
+        'story': '200px',
       }
     },
   },
