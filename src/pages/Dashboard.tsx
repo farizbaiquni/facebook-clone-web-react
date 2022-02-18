@@ -1,13 +1,15 @@
 import React from 'react'
+import LeftSidebar from '../components/LeftSidebar'
 import Navbar from '../components/Navbar'
 
-function Dashboard() {
+export default function Dashboard() {
   return (
     <React.Fragment>
         <Navbar />
-        <div>Dashboard</div>
+        <div className=' flex justify-between mt-5'>
+            <LeftSidebar />
+        </div>
+
     </React.Fragment>
   )
 }
-
-export default Dashboard

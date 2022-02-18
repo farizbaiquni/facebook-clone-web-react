@@ -2,19 +2,24 @@ import React from 'react'
 
 export default function Navbar() {
   return (
-    <nav className="navbar flex py-2 px-3 justify-between">
+    <nav className="navbar flex py-2 px-3 justify-between border-b-2 border-gray-300">
       
       {/* Left side */}
-      <div className="left flex items-center mr-3">
-        <img src={process.env.PUBLIC_URL + './facebook_icon.png'} alt="" className=' h-10 w-10 cursor-pointer' />
-        <div className="flex relative">
-          <span className="rounded-l-md inline-flex  items-center pl-5 border-t  text-gray-500 shadow-sm text-sm">
+      <div className="left flex items-center mr-3 flex-row-reverse">
+        
+        <input type="text" id="email-with-icon" className=" peer rounded-r-lg flex-1 appearance-none w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-700 text-base focus:outline-none focus:border-transparent" name="search" placeholder="Search Facebook"/>
+        <div className={` hidden peer-focus:block`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 cursor-pointer" viewBox="0 0 20 20" fill="gray">
+            <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+        </div>
+        <span className=" peer-focus:hidden rounded-l-md inline-flex  items-center pl-5 border-t  text-gray-500 shadow-sm text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>  
           </span>
-          <input type="text" id="email-with-icon" className=" rounded-r-lg flex-1 appearance-none w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-700 text-base focus:outline-none focus:border-transparent" name="email" placeholder="Search Facebook"/>
-        </div>
+        
+        <img src={process.env.PUBLIC_URL + './facebook_icon.png'} alt="" className=' h-10 w-10 cursor-pointer peer-focus:hidden' />
 
       </div>
 
