@@ -10,7 +10,9 @@ module.exports = {
       },
       width: {
         '600': '600px',
-        '500': '400px',
+        'post': '550px',
+        '400': '400px',
+
       },
       screens: {
         'min-sm': '640px',
