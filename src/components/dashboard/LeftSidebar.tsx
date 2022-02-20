@@ -13,7 +13,7 @@ export default function LeftSidebar() {
         <table className=' ml-3'>
             <tr>
                 <td>
-                    <img src={process.env.PUBLIC_URL + 'facebook_icon.png'} alt="icon friends" className=' h-9 w-9'/>
+                    <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="icon friends" className=' h-9 w-9 rounded-full'/>
                 </td>
                 <td className=' pl-3 font-medium cursor-pointer text-left' >Fariz Baiquni</td>
             </tr>

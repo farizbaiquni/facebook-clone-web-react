@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import Story from '../components/dashboard/Story'
 import RightSide from '../components/dashboard/RightSide'
 import PostInput from '../components/dashboard/PostInput'
+import Post from '../components/post/Post'
 
 export default function Dashboard() {
   return (
@@ -13,7 +14,10 @@ export default function Dashboard() {
             <LeftSidebar />
             <div className="main-content flex flex-col w-600">
                 <Story />
-                <PostInput />
+                <span className=' w-post m-auto'>
+                  <PostInput />
+                  <Post />
+                </span>
             </div>
             <RightSide />
         </div>

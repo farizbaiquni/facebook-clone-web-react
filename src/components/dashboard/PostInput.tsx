@@ -25,9 +25,9 @@ export default function PostInput() {
     const[textInput, setTextInput] = useState('')
 
     return (
-        <div className="post-input mt-10 w-post m-auto shadow shadow-gray-400">
-            <div className="top flex items-center py-3">
-                <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="profile-post" className=' rounded-full h-10 w-10 ml-3' />
+        <div className="post-input mt-10 mb-7 shadow shadow-gray-400">
+            <div className="top flex items-center py-3 ml-3">
+                <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="profile-post" className=' rounded-full h-10 w-10' />
                 <p className=' ml-3 mr-3 cursor-pointer text-gray-600 text-lg w-full text-left' onClick={ openModal }>What's on your mind, fariz?</p>
             </div>
             <div className='bottom flex justify-center py-2'>

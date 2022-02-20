@@ -60,7 +60,7 @@ export default function Navbar() {
       {/* right side */}
       <div className="right flex items-center">
         <span className="profile flex items-center">
-          <img src={process.env.PUBLIC_URL + './facebook_icon.png'} alt="photo profile" className=' w-8 cursor-pointer' />
+          <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="photo profile" className=' h-8 w-8 rounded-full cursor-pointer' />
           <p className=' ml-1 font-semibold cursor-pointer'>Baiquni</p>
         </span>
 
