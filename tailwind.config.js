@@ -12,7 +12,7 @@ module.exports = {
         '600': '600px',
         'post': '550px',
         '400': '400px',
-
+        '300': '300px',
       },
       screens: {
         'min-sm': '640px',
@@ -52,5 +52,7 @@ module.exports = {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+  ],
 }
