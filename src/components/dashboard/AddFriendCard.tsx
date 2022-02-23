@@ -12,7 +12,7 @@ export default function AddFriendCard() {
                 <p className=' mt-1 text-lg font-medium break-all line-clamp-1 text-left cursor-pointer'>Hanzzuhiga</p>
                 <span className="flex items-center mt-1 cursor-pointer">
                     <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="" className=' w-5 h-5 rounded-full' />
-                    <p className=' text-gray-500 ml-1 text-sm line-clamp-1'>100 mutual friends</p>
+                    <p className=' text-gray-500 text-left ml-1 text-xs line-clamp-1'>100 mutual friends</p>
                 </span>
             </span>
 
