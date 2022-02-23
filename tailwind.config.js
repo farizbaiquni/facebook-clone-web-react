@@ -7,6 +7,8 @@ module.exports = {
       //height
       spacing: {
         '100vh': '100vh',
+        '280px': '280px',
+        '160px': '160px'
       },
       width: {
         '600': '600px',

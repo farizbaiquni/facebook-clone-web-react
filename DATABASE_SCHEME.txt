@@ -1,10 +1,69 @@
-
 USERS 
-first_name, last_name, email, birth_date, photo_profile, gender, create-at, friends[]
+first_name, 
+last_name, 
+email, 
+birth_date, 
+photo_profile, 
+gender, 
+create-at, 
+friends[]
+
 
 POSTS  
-id_user, access_type, access_members[], photo, name, create-at, post, like[], COMMENTS
+id_user,
+access_type<public friends, friends_except, specific_friends, only_me, custom>,
+access_members[],
+inaccessible_members[],
+content_type <photo, video, gift, only_text: String>,
+content <URL: String>,
+text,
+create-at,
+like[],
+COMMENTS -> DILUAR POST
+total_share, ---> TRANSACTION IN FIREBASE
+total_react, ---> TRANSACTION IN FIREBASE
+REACT, ---> DI DALAM POSTS
+REACT TOTAL DETAIL, ---> untuk keperluan menampilkan total masing-masing react
+LIKES, ---> DI DALAM POSTS
+LOVES, ---> DI DALAM POSTS
+
+
+SHARE
+id_user,
+photo_url,
+name,
+
 
 COMMENTS
-name, comment, like[], create_at
+name, 
+text,
+content_attach<photo, gif: string<url>>
+create_at,
+replay[idComment: string],
+REACT TOTAL DETAIL,
+total_react, ---> TRANSACTION IN FIREBASE,
+LIKES, -> DI DALAM COMMENTS
+LOVES, -> DI DALAM COMMENTS
+
+
+REACT TOTAL DETAIL
+total_likes, ---> TRANSACTION IN FIREBASE
+total_loves, ---> TRANSACTION IN FIREBASE
+
+
+LIKES / LOVES
+id_user,
+photo_url,
+name,
+
+
+=== ATURAN COMMENTS ===
+jika di halaman khusus post :
+- maksimal tampilan awal komen 6
+- replay tidak ditampilkan, hanya jumlah replay
+- jika load more... diklik tambah 50 comment
+jika di halaman dashboard maupun homepage
+- tampilkan 1 saja comment
+- replay tidak ditampilkan, hanya jumlah replay
+- jika load more... diklik tambah 50 comment
 

@@ -9,7 +9,7 @@ import TextStatusPost from './TextStatusPost'
 
 export default function Post() {
   return (
-    <div className="post ml-3 mb-20">
+    <div className="post ml-3 mb-10">
       <HeaderPost />
       <TextStatusPost />
       <ContentPost />
