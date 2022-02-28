@@ -1,7 +1,11 @@
 import React, { useContext } from 'react'
 import Modal from 'react-modal';
-import { getAuth, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, EmailAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
-import { FirebaseContext } from '../contexts/firebaseContext';
+import { getAuth, createUserWithEmailAndPassword, 
+    fetchSignInMethodsForEmail, EmailAuthProvider, 
+    signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { FirebaseContext } from '../contexts/FirebaseContext';
+import { AuthContext } from '../contexts/AuthContext';
+import { doc, setDoc, Timestamp, getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const customStyles = {
     overlay: {
@@ -24,32 +28,49 @@ export const SignIn = () => {
     const closeModal = () => setIsOpen(false)
 
     const auth = getAuth()
- 
-    const handleSignUp = async () => {
-        await createUserWithEmailAndPassword(auth, email, password)
+    const db = getFirestore()
+
+    const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+
+        try {
+            await createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                // const user = userCredential.user;
+                createDataUSer()
             })
             .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                alert(errorMessage + "Error Code : " + errorCode )
-            })
-    }
-
-    const handleEmailExist = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault()
-        await fetchSignInMethodsForEmail( auth, email)
-            .then((signInMethods) => {
-                if (signInMethods.indexOf(EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD) != -1) {
-                    alert("Email Exist")
+                if("uth/email-already-in-use"){
+                    alert("Email already in use")
                 }else{
-                    handleSignUp()
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    alert(errorMessage + "Error Code : " + errorCode )
                 }
             })
-            .catch((error) => {
-                alert(error)
-            })
+
+        } catch (error) {
+            
+        }
+    }
+
+    const createDataUSer = async () => {
+
+        await updateProfile(auth.currentUser!!, {
+            displayName: firstName + lastName
+          }).then(() => {
+            // Profile updated!
+          }).catch((error) => {
+            // An error occurred
+          });
+
+         await setDoc(doc(db, "users", getAuth().currentUser!.uid), {
+            firstName: firstName,
+            lastName: lastName,
+            birthDate: birthDate,
+            gender: gender,
+            createAt: serverTimestamp(),
+            friends: [],
+        })
     }
 
     const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -146,7 +167,7 @@ export const SignIn = () => {
                         if (firstName.length <= 0 || lastName.length <= 0 || email.length <= 0 || password.length <= 0 || birthDate.length <= 0 || gender.length <= 0) {
                             setClickedInput({...clickedInput, firstName: true, lastName: true, email: true, password: true, birthDate: true, gender: true,})
                         } else {
-                            handleEmailExist(e)
+                            handleSignUp(e)
                         }
                     }}>
                     <h1 className='text-3xl font-semibold'>Sign Up</h1>

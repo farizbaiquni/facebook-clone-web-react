@@ -6,7 +6,8 @@ birth_date,
 photo_profile, 
 gender, 
 create-at, 
-friends[]
+friends[id_user]
+FRIENDS_DETAILS[]
 
 
 POSTS  
