@@ -10,6 +10,15 @@ friends[id_user]
 FRIENDS_DETAILS[]
 
 
+FRIEND_REQUESTS
+sender
+receiver
+
+
+NOT SUGGESTED FRIENDS
+
+
+
 POSTS  
 id_user,
 access_type<public friends, friends_except, specific_friends, only_me, custom>,

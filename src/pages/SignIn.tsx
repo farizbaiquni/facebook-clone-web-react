@@ -1,11 +1,9 @@
 import React, { useContext } from 'react'
 import Modal from 'react-modal';
-import { getAuth, createUserWithEmailAndPassword, 
-    fetchSignInMethodsForEmail, EmailAuthProvider, 
+import { getAuth, createUserWithEmailAndPassword,
     signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { FirebaseContext } from '../contexts/FirebaseContext';
-import { AuthContext } from '../contexts/AuthContext';
-import { doc, setDoc, Timestamp, getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getFirestore, serverTimestamp } from "firebase/firestore";
 
 const customStyles = {
     overlay: {
@@ -64,6 +62,7 @@ export const SignIn = () => {
           });
 
          await setDoc(doc(db, "users", getAuth().currentUser!.uid), {
+            userId: getAuth().currentUser?.uid,
             firstName: firstName,
             lastName: lastName,
             birthDate: birthDate,
@@ -77,12 +76,10 @@ export const SignIn = () => {
         event.preventDefault()
         await signInWithEmailAndPassword(auth, loginEmail, loginPassword)
             .then((userCredential) => {
-                // const user = userCredential.user;
                 alert("login success")
             })
             .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
+                alert('Login error, error code = ' + error.code + ', pesan error = ' + error.message)
             });
     }
 

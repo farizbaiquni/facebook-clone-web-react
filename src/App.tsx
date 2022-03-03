@@ -8,13 +8,12 @@ import { SignIn } from './pages/SignIn';
 function App() {
 
   const user = useAuthListener()
-  console.log(user)
 
   return (
     <AuthContext.Provider value={user}>
       <div className="App">
-          <SignIn/>
-          {/* <Dashboard /> */}
+          {/* <SignIn/> */}
+          <Dashboard />
       </div>
     </AuthContext.Provider>
   );
