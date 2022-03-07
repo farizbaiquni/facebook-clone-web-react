@@ -23,7 +23,7 @@ export default function AddFriendCard(props: propsType) {
 
     const [isRequestSend, setIsRequestSend] = useState<boolean>(false)
     const [idRequest, setIdRequest] = useState<string | null>(null)
-    const user = useContext(AuthContext)
+    const authUser = useContext(AuthContext)
     const db = getFirestore()
 
     const handleAddFriends = async () => {
@@ -31,29 +31,43 @@ export default function AddFriendCard(props: propsType) {
             const ref = doc(collection(db, 'requestFriends'));
 
             await runTransaction(db, async (transaction) => {
-                
-                const sfDoc =  user?.uid ? await transaction.get(doc(db, "notSuggestedFriends", user?.uid)) : null;;
 
-                (user?.uid && props.suggested.userId) && transaction.set(ref, {
-                    sender: user.uid,
-                    receiver: props.suggested.userId
+                const notSuggestedAuth =  await transaction.get(doc(db, "notSuggestedFriends", authUser?.uid!));
+                const notSuggestedTarget =  await transaction.get(doc(db, "notSuggestedFriends", props.suggested.userId!));
+
+                // Add friend request 
+                transaction.set(ref, {
+                    sender: authUser?.uid!,
+                    receiver: props.suggested.userId!
                 });
 
-                if ( sfDoc == null || !sfDoc?.exists()) {
-                    (user?.uid && props.suggested.userId) && transaction.set(doc(db, "notSuggestedFriends", user?.uid), {
-                        userId: user?.uid!,
-                        idList: arrayUnion(props.suggested.userId)
-                    }); 
+
+                if (!notSuggestedAuth?.exists()) {
+                    transaction.set(doc(db, "notSuggestedFriends", authUser?.uid!), {
+                        idList: [props.suggested.userId]
+                    });
                 }else{
-                    (user?.uid && props.suggested.userId) && transaction.update(doc(db, "notSuggestedFriends", user?.uid), {
+                    transaction.update(doc(db, "notSuggestedFriends", authUser?.uid!), {
                         idList: arrayUnion(props.suggested.userId)
                     }); 
                 }
 
+                
+                if (!notSuggestedTarget?.exists()) {
+                    transaction.set(doc(db, "notSuggestedFriends", props.suggested.userId!), {
+                        idList: [authUser?.uid!]
+                    });
+                }else{
+                    transaction.update(doc(db, "notSuggestedFriends", props.suggested.userId!), {
+                        idList: arrayUnion(authUser?.uid!)
+                    }); 
+                }
+
+                setIsRequestSend(true)
+                setIdRequest(ref.id)
+
               });
 
-            setIsRequestSend(true)
-            setIdRequest(ref.id)
         } catch (error) {
             alert(error)
         }
@@ -62,16 +76,19 @@ export default function AddFriendCard(props: propsType) {
     const handleCancelAddFriend = async() => {
         try {
             await runTransaction(db, async (transaction) => {
-                (idRequest && isRequestSend) && transaction.delete(doc(db, 'requestFriends', idRequest))
-                    .update(doc(db, "notSuggestedFriends", user?.uid!), {
+                transaction.delete(doc(db, 'requestFriends', idRequest!))
+                    .update(doc(db, "notSuggestedFriends", authUser?.uid!), {
                         idList: arrayRemove(props.suggested.userId)
+                    }).update(doc(db, "notSuggestedFriends", props.suggested.userId!), {
+                        idList: arrayRemove(authUser?.uid)
                     });
-              });
+                
+                setIsRequestSend(false)
+                setIdRequest(null)
 
-            setIsRequestSend(false)
-            setIdRequest(null)
+            });
         } catch (error) {
-            alert("Something wrong")
+            alert(error)
         }
     }
 
@@ -113,13 +130,13 @@ export default function AddFriendCard(props: propsType) {
                 
                 {
                     !isRequestSend ? (
-                        <span className=' flex items-center justify-center rounded-lg my-auto hover:bg-blue-100 mx-1 px-5 py-2 cursor-pointer' onClick={handleAddFriends}>
+                        <span className=' flex items-center justify-center rounded-lg my-auto hover:bg-blue-100 mx-1 px-5 py-2 cursor-pointer' onClick={ () => (authUser?.uid && props.suggested.userId) && handleAddFriends() }>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="#4361ee">
                                 <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
                             </svg>
                             <p className=' font-medium ml-1 text-blue-600'>Add Friend</p>
                         </span> ) : (
-                        <span className=' flex items-center justify-center rounded-lg my-auto hover:bg-gray-300 mx-1 px-5 py-2 cursor-pointer' onClick={handleCancelAddFriend}>
+                        <span className=' flex items-center justify-center rounded-lg my-auto hover:bg-gray-300 mx-1 px-5 py-2 cursor-pointer' onClick={ () => (authUser?.uid && props.suggested.userId) && handleCancelAddFriend() }>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="#black">
                                 <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
                             </svg>
