@@ -8,7 +8,9 @@ module.exports = {
       spacing: {
         '100vh': '100vh',
         '280px': '280px',
-        '160px': '160px'
+        '160px': '160px',
+        '3px' : '3px',
+        '1px': '1px'
       },
       width: {
         '600': '600px',

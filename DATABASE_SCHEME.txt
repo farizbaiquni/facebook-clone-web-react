@@ -7,15 +7,26 @@ photo_profile,
 gender, 
 create-at, 
 friends[id_user]
-FRIENDS_DETAILS[]
+FRIENDS_DETAILS -> collection di luar users
+
+
+
+FRIENDS_DETAILS
+name,
+photo_url,
 
 
 FRIEND_REQUESTS
 sender
 receiver
+date
+
 
 
 NOT SUGGESTED FRIENDS
+userId: String
+idList: String
+
 
 
 
@@ -25,46 +36,66 @@ access_type<public friends, friends_except, specific_friends, only_me, custom>,
 access_members[],
 inaccessible_members[],
 content_type <photo, video, gift, only_text: String>,
-content <URL: String>,
+content <URL: String>[],
 text,
+share   {total, [idUser] -> maksimal array 20},
 create-at,
-like[],
-COMMENTS -> DILUAR POST
-total_share, ---> TRANSACTION IN FIREBASE
-total_react, ---> TRANSACTION IN FIREBASE
-REACT, ---> DI DALAM POSTS
-REACT TOTAL DETAIL, ---> untuk keperluan menampilkan total masing-masing react
-LIKES, ---> DI DALAM POSTS
-LOVES, ---> DI DALAM POSTS
+like    {total, [idUser] -> maksimal array 20},
+love    {total, [idUser] -> maksimal array 20},
+care    {total, [idUser] -> maksimal array 20},
+haha    {total, [idUser] -> maksimal array 20},
+wow     {total, [idUser] -> maksimal array 20},
+sad     {total, [idUser] -> maksimal array 20},
+angry   {total, [idUser] -> maksimal array 20},
+POST_REACT_DETAILS -> collection di luar post,
+COMMENTS -> collection di luar post,
 
 
-SHARE
+
+POST_REACT_DETAILS  (Berhubungan dengan collection posts)
+idUser, 
+photo_url,
+name,
+type,
+
+
+
+SHARE_DETAIL
 id_user,
 photo_url,
 name,
 
 
-COMMENTS
-name, 
+
+COMMENTS (Berhubungan dengan collection posts)
+photo_url, 
+name,
 text,
-content_attach<photo, gif: string<url>>
+content_attach {url, type<gif / photo : string>}
 create_at,
-replay[idComment: string],
-REACT TOTAL DETAIL,
-total_react, ---> TRANSACTION IN FIREBASE,
-LIKES, -> DI DALAM COMMENTS
-LOVES, -> DI DALAM COMMENTS
+replay [idComment: string],
+total_like  : int,
+total_love  : int,
+total_care  : int,
+total_haha  : int,
+total_wow   : int,
+total_sad   : int,
+total_angry : int,
+COMMENTS_REACT_DETAIL
 
 
-REACT TOTAL DETAIL
+
+COMMENTS_REACT_DETAIL
 total_likes, ---> TRANSACTION IN FIREBASE
 total_loves, ---> TRANSACTION IN FIREBASE
+
 
 
 LIKES / LOVES
 id_user,
 photo_url,
 name,
+
 
 
 === ATURAN COMMENTS ===

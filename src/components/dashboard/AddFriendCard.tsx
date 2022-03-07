@@ -1,4 +1,4 @@
-import { addDoc, arrayRemove, arrayUnion, collection, deleteDoc, doc, getFirestore, runTransaction, setDoc, updateDoc } from 'firebase/firestore'
+import { addDoc, arrayRemove, arrayUnion, collection, deleteDoc, doc, getFirestore, runTransaction, setDoc, Timestamp, updateDoc } from 'firebase/firestore'
 import React, { useContext, useState } from 'react'
 import { AuthContext } from '../../contexts/AuthContext'
 
@@ -38,7 +38,8 @@ export default function AddFriendCard(props: propsType) {
                 // Add friend request 
                 transaction.set(ref, {
                     sender: authUser?.uid!,
-                    receiver: props.suggested.userId!
+                    receiver: props.suggested.userId!,
+                    date: Timestamp.now()
                 });
 
 

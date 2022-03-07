@@ -1,6 +1,24 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import ProfilePopUpMenu from './ProfilePopUpMenu';
 
 export default function Navbar() {
+
+  const [isMorePofileVisible, setIsMorePofileVisible] = useState(false);
+  const elementRef = useRef<any>(null);
+
+  const handleClickOutside = (event: MouseEvent) => {
+      if (elementRef.current && !elementRef.current.contains(event.target)) {
+          setIsMorePofileVisible(false);
+      }
+  };
+
+  useEffect(() => {
+    document.addEventListener('click', handleClickOutside, true);
+    return () => {
+        document.removeEventListener('click', handleClickOutside, true);
+    };
+}, []);
+
   return (
     <nav className="navbar flex py-2 px-3 justify-between border-b-2 border-gray-300">
       
@@ -60,7 +78,7 @@ export default function Navbar() {
       {/* right side */}
       <div className="right flex items-center">
         <span className="profile flex items-center">
-          <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="photo profile" className=' h-8 w-8 rounded-full cursor-pointer' />
+          <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="photo_profile" className=' h-8 w-8 rounded-full cursor-pointer' />
           <p className=' ml-1 font-semibold cursor-pointer'>Baiquni</p>
         </span>
 
@@ -76,11 +94,17 @@ export default function Navbar() {
           <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
         </svg>
 
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9 p-2 rounded-full cursor-pointer hover:bg-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
+        
+        <div ref={elementRef} className="relative text-left">
+            <div>
+              <svg onClick={ () => setIsMorePofileVisible(!isMorePofileVisible) } xmlns="http://www.w3.org/2000/svg" className="h-9 w-9 p-2 rounded-full cursor-pointer hover:bg-slate-300" fill="none" viewBox="0 0 24 24" stroke={isMorePofileVisible ? "blue" : "currentColor"}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              <ProfilePopUpMenu isMorePofileVisible={isMorePofileVisible} />
+            </div> 
+        </div>
 
+      </div>
     </nav>
   )
 }

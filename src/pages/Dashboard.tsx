@@ -1,6 +1,6 @@
 import React from 'react'
 import LeftSidebar from '../components/dashboard/LeftSidebar'
-import Navbar from '../components/Navbar'
+import Navbar from '../components/navbar/Navbar'
 import Stories from '../components/dashboard/Stories'
 import RightSidebar from '../components/dashboard/RightSidebar'
 import PostInput from '../components/dashboard/PostInput'
