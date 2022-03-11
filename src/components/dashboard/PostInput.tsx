@@ -22,7 +22,16 @@ export default function PostInput() {
     const openModal = () => setIsOpen(true)
     const closeModal = () => setIsOpen(false)
 
-    const[textInput, setTextInput] = useState('')
+    const [textInput, setTextInput] = useState('')
+    const [accessType, setAccessType] = useState('')
+    const [accessMembers, setAccessMembers] = useState('')
+    const [inaccessMembers, setInaccessMembers] = useState('')
+    const [contentType, setContentType] = useState('')
+    const [content, setContent] = useState('')
+    const [feeling, setFeeling] = useState('')
+    const [location, setLocation] = useState('')
+    const [tag, setTag] = useState('')
+    
 
     return (
         <div className="post-input mt-10 mb-7 shadow shadow-gray-400">

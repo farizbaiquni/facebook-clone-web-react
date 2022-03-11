@@ -6,14 +6,8 @@ birth_date,
 photo_profile, 
 gender, 
 create-at, 
-friends[id_user]
-FRIENDS_DETAILS -> collection di luar users
+friends[id_user],
 
-
-
-FRIENDS_DETAILS
-name,
-photo_url,
 
 
 FRIEND_REQUESTS
@@ -29,15 +23,20 @@ idList: String
 
 
 
+SEARCH_POSTS
+access_type<public friends, friends_except, specific_friends, only_me, custom>,
+friends_allowed[]
+
+
 
 POSTS  
 id_user,
-access_type<public friends, friends_except, specific_friends, only_me, custom>,
-access_members[],
-inaccessible_members[],
-content_type <photo, video, gift, only_text: String>,
-content <URL: String>[],
-text,
+textPost,
+feeling,
+location,
+tag[{idUser, name}],
+content_type <text-only, photo-video, gif, qna>,
+content []<URL: String> <gif / photo-video / qna / event / live>
 share   {total, [idUser] -> maksimal array 20},
 create-at,
 like    {total, [idUser] -> maksimal array 20},
@@ -47,29 +46,39 @@ haha    {total, [idUser] -> maksimal array 20},
 wow     {total, [idUser] -> maksimal array 20},
 sad     {total, [idUser] -> maksimal array 20},
 angry   {total, [idUser] -> maksimal array 20},
+displayed_comment {
+    idUser,
+    text,
+    content_attach {url, type<gif / photo : string>}
+    create_at,
+    replay [idComment: string],
+    total_like  : int,
+    total_love  : int,
+    total_care  : int,
+    total_haha  : int,
+    total_wow   : int,
+    total_sad   : int,
+    total_angry : int,
+    COMMENTS_REACT_DETAIL
+}
 POST_REACT_DETAILS -> collection di luar post,
 COMMENTS -> collection di luar post,
 
 
 
 POST_REACT_DETAILS  (Berhubungan dengan collection posts)
-idUser, 
-photo_url,
-name,
+idUser,
 type,
 
 
 
 SHARE_DETAIL
-id_user,
-photo_url,
-name,
+idUser,
 
 
 
 COMMENTS (Berhubungan dengan collection posts)
-photo_url, 
-name,
+idUser,
 text,
 content_attach {url, type<gif / photo : string>}
 create_at,
@@ -86,9 +95,10 @@ COMMENTS_REACT_DETAIL
 
 
 COMMENTS_REACT_DETAIL
-total_likes, ---> TRANSACTION IN FIREBASE
-total_loves, ---> TRANSACTION IN FIREBASE
-
+idUser,
+name
+photoUrl,
+type <like / love / care / haha / wow /sad / angry>,
 
 
 LIKES / LOVES

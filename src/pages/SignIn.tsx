@@ -3,7 +3,7 @@ import Modal from 'react-modal';
 import { getAuth, createUserWithEmailAndPassword,
     signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { FirebaseContext } from '../contexts/FirebaseContext';
-import { doc, setDoc, getFirestore, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getFirestore, serverTimestamp, Timestamp } from "firebase/firestore";
 
 const customStyles = {
     overlay: {
@@ -67,7 +67,7 @@ export const SignIn = () => {
             lastName: lastName,
             birthDate: birthDate,
             gender: gender,
-            createAt: serverTimestamp(),
+            createAt: Timestamp.now(),
             friends: [],
         })
     }
