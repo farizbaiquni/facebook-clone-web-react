@@ -80,8 +80,6 @@ export default function SuggestedFriends() {
                 }
             }
 
-            console.log(suggested)
-
             setSuggestedFriends(suggested)
 
         } catch (error) {

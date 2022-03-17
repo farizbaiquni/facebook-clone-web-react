@@ -9,6 +9,12 @@ create-at,
 friends[id_user],
 
 
+USERS PROFILE -> id = idUser
+idUser
+photoUrl
+name
+
+
 
 FRIEND_REQUESTS
 sender
@@ -25,7 +31,7 @@ idList: String
 
 SEARCH_POSTS
 access_type<public friends, friends_except, specific_friends, only_me, custom>,
-friends_allowed[]
+access_allowed[]
 
 
 

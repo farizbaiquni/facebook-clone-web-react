@@ -3,7 +3,7 @@ import Modal from 'react-modal';
 import { getAuth, createUserWithEmailAndPassword,
     signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { FirebaseContext } from '../contexts/FirebaseContext';
-import { doc, setDoc, getFirestore, serverTimestamp, Timestamp } from "firebase/firestore";
+import { doc, setDoc, getFirestore, serverTimestamp, Timestamp, writeBatch } from "firebase/firestore";
 
 const customStyles = {
     overlay: {
@@ -28,6 +28,7 @@ export const SignIn = () => {
     const auth = getAuth()
     const db = getFirestore()
 
+
     const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
@@ -47,21 +48,26 @@ export const SignIn = () => {
             })
 
         } catch (error) {
-            
+            alert(error)
         }
     }
 
-    const createDataUSer = async () => {
 
+    const createDataUSer = async () => {
         await updateProfile(auth.currentUser!!, {
             displayName: firstName + lastName
-          }).then(() => {
-            // Profile updated!
-          }).catch((error) => {
-            // An error occurred
-          });
 
-         await setDoc(doc(db, "users", getAuth().currentUser!.uid), {
+          }).then(() => {
+            addDataAfterCreateUser()
+          })
+    }
+
+    const addDataAfterCreateUser = async () => {
+        const userRef = doc(db, 'users', getAuth().currentUser!.uid)
+        const userProfileRef = doc(db, 'usersProfile', getAuth().currentUser!.uid)
+        
+        const batch = writeBatch(db);
+        batch.set(userRef, {
             userId: getAuth().currentUser?.uid,
             firstName: firstName,
             lastName: lastName,
@@ -70,7 +76,15 @@ export const SignIn = () => {
             createAt: Timestamp.now(),
             friends: [],
         })
-    }
+
+        batch.set(userProfileRef, {
+            userId: getAuth().currentUser!.uid,
+            photoUrl: '',
+            name: firstName + ' ' + lastName,
+        })
+
+        await batch.commit()
+}
 
     const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -130,7 +144,7 @@ export const SignIn = () => {
             </div>
 
             <div className="right_side">
-                <form action="" className='w-400 border-2 border-slate-300 pt-14 pb-8 px-5 rounded-md shadow shadow-lg shadow-gray-300' onSubmit={ e => handleLogin(e)}>
+                <form action="" className='w-400 border-2 border-slate-300 pt-14 pb-8 px-5 rounded-md shadow-lg shadow-gray-300' onSubmit={ e => handleLogin(e)}>
 
                     <input typeof='email' id="inputEmail" className="rounded-md border-transparent flex-1 appearance-none border border-gray-300 w-full py-3 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent" name="email" placeholder="Email address or phone number"onChange={(event) => setLoginEmail(event.target.value)} />
 
