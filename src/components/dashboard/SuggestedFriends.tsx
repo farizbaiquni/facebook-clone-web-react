@@ -49,7 +49,6 @@ export default function SuggestedFriends() {
             querySnapshots = await getDocs(queryFetch)
             querySnapshots.forEach((doc) => {
                 (!notSuggested.includes(doc.data().userId)) && suggested.push(doc.data())
-                console.log(doc.data())
             });
 
             //Ensure that collection have minimum users
