@@ -3,10 +3,12 @@ import { collection, doc, DocumentData, getDoc, getDocs, getFirestore, limit, or
 import React, { createRef, lazy, Suspense, useContext, useEffect, useState } from 'react'
 import Modal from 'react-modal';
 import { AuthContext } from '../../contexts/AuthContext';
-import UserProfile from './UserProfile';
+import SelectUserProfile from './SelectUserProfile';
+import * as modalPostInputConstants from '../../constants/ModalPostInput'
+import ModalAccessExceptFriends from './ModalAccessExceptFriends';
 
 
-type userProfileType =  {
+type userProfileType = {
     idUser: string
     photoUrl: string
     name: string
@@ -29,19 +31,8 @@ export default function PostInput() {
         },
     };
 
-    const modalShowOption = {
-        main: 'main',
-        access: 'access',
-        except: 'except',
-    }
-
-    const accessTypeOption = {
-        public: 'Public',
-        friends: 'Friends',
-        except: 'Except',
-        specific: 'Specific',
-        onlyMe: 'Only me',
-    }
+    const modalShowOption = modalPostInputConstants.modalShowOption
+    const accessTypeOption = modalPostInputConstants.accessTypeOption
 
     const db = getFirestore()
     const authUser = useContext(AuthContext)
@@ -50,9 +41,10 @@ export default function PostInput() {
     const openModal = () => setIsOpen(true)
     const closeModal = () => setIsOpen(false)
 
-    const [modalShowSpecific, setModalShowSpecific] = useState(modalShowOption.main)
     const [friendsProfile, setFriendsProfile] = useState<Array<userProfileType>>([])
+    const [modalShowSpecific, setModalShowSpecific] = useState(modalShowOption.main)
     const [lastVisibleFriends, setLastVisibleFriends] = useState< QueryDocumentSnapshot<DocumentData> | undefined | null>(null)
+    const [isFirstFetchFriendsDone, setIsFirstFetchFriendsDone] = useState<Boolean>(false)
 
     const accessPublicRef = createRef<HTMLInputElement>()
     const accessFriendscRef = createRef<HTMLInputElement>()
@@ -61,13 +53,15 @@ export default function PostInput() {
 
     const [textInput, setTextInput] = useState('')
     const [accessType, setAccessType] = useState(accessTypeOption.friends)
-    const [accessException, setAccessException] = useState(new Set<string>())
+    const [accessExceptions, setAccessExceptions] = useState<Array<String>>([])
     const [contentType, setContentType] = useState('text-only')
     const [content, setContent] = useState<Object | null>(null)
     const [feeling, setFeeling] = useState(null)
     const [location, setLocation] = useState(null)
     const [tag, setTag] = useState<Array<Object> | null>(null)
 
+
+    console.log("DATA EXCEPT: " + accessExceptions)
 
     const handlePost = async() => {
 
@@ -76,7 +70,7 @@ export default function PostInput() {
         
         if(docUserSnap.exists()){
 
-            const filteredAllowed = removeSpecificArray(docUserSnap.data().friends, accessException)
+            const filteredAllowed = removeSpecificArray(docUserSnap.data().friends, new Set(accessExceptions))
 
             const batch = writeBatch(db) 
 
@@ -128,9 +122,7 @@ export default function PostInput() {
 
 
     const firstFetchFriends = async() => {
-        console.log("FIRST FETCH FRIENDS")
         let friends: Array<userProfileType> = []
-
         // Query the first page of docs
         const first = query(collection(db, "userProfile"), orderBy("name"), limit(5));
         const documentSnapshots = await getDocs(first);
@@ -143,17 +135,17 @@ export default function PostInput() {
             })
             setFriendsProfile(friends)
             setLastVisibleFriends(lastVisible)
+            setIsFirstFetchFriendsDone(true)
         } else {
             setLastVisibleFriends(undefined)
+            setIsFirstFetchFriendsDone(true)
         }
         friends = []
     }
 
 
     const nextFetchFriends = async() => {
-        console.log("NEXT FETCH FRIEND")
         let friends: Array<userProfileType> = friendsProfile
-
         // Construct a new query starting at this document,
         // get the next 25 cities.
         const next = query(collection(db, "userProfile"),
@@ -179,15 +171,10 @@ export default function PostInput() {
 
 
     const scrollModal = () => {
-        if( (modalScrollDivRef.current?.scrollHeight! - modalScrollDivRef.current?.scrollTop!) === modalScrollDivRef.current?.clientHeight ){
+        if( isFirstFetchFriendsDone && (modalScrollDivRef.current?.scrollHeight! - modalScrollDivRef.current?.scrollTop!) === modalScrollDivRef.current?.clientHeight ){
             (lastVisibleFriends !== undefined) && nextFetchFriends()
         }
     }
-
-
-    useEffect(()=>{
-        firstFetchFriends()
-    }, [])
 
 
     return (
@@ -226,7 +213,7 @@ export default function PostInput() {
                 ariaHideApp={false}
             >   
 
-                <form action="form-sign-up" className={`${ (modalShowSpecific !== modalShowOption.main) && ' h-500px' }`}>
+                <form action="form-sign-up" className={`${ (modalShowSpecific !== modalShowOption.main) && '' }`}>
 
                     { (() => {
 
@@ -356,7 +343,7 @@ export default function PostInput() {
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                                 </svg>
                                             </div>
-                                            <div className=" flex items-center group py-3 cursor-pointer">
+                                            <div className=" flex items-center group py-3 cursor-pointer" onClick={() => { setModalShowSpecific(modalShowOption.specific) }}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 p-3 rounded-full group-hover:bg-gray-300 mr-3" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                                                 </svg>
@@ -400,9 +387,10 @@ export default function PostInput() {
                                     </div>
                                 )
 
-                            case modalShowOption.except: 
+                            case modalShowOption.except:
+                                (isFirstFetchFriendsDone === false) && firstFetchFriends()
                                 return (
-                                    <div className=' overflow-x-hidden overflow-y-auto h-500px' ref={modalScrollDivRef} onScroll={scrollModal}>
+                                    <div className=' overflow-x-hidden overflow-y-scroll' ref={modalScrollDivRef} onScroll={scrollModal}>
                                         {/* Top bar modal */}
                                         <div className=' flex items-center'>
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 cursor-pointer" viewBox="0 0 20 20" fill="currentColor" onClick={ () =>
@@ -410,6 +398,27 @@ export default function PostInput() {
                                                 <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/>
                                             </svg>
                                             <p className=' flex-1 text-center text-lg font-bold'>Friends Except...</p>
+                                        </div>
+
+                                        <ModalAccessExceptFriends 
+                                            friendsProfile = {friendsProfile} 
+                                            setAccessExceptions = { (data: Array<String>) => setAccessExceptions(data) }
+                                        />
+                                        
+                                    </div>
+                                )
+                            
+                            case modalShowOption.specific:
+                                (isFirstFetchFriendsDone === false) && firstFetchFriends()
+                                return (
+                                    <div className=' overflow-x-hidden overflow-y-scroll' ref={modalScrollDivRef} onScroll={scrollModal}>
+                                        {/* Top bar modal */}
+                                        <div className=' flex items-center'>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 cursor-pointer" viewBox="0 0 20 20" fill="currentColor" onClick={ () =>
+                                                setModalShowSpecific(modalShowOption.access) }>
+                                                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/>
+                                            </svg>
+                                            <p className=' flex-1 text-center text-lg font-bold'>Specific Friends</p>
                                         </div>
 
                                         <div className=' flex mt-10 items-center'>
@@ -423,13 +432,16 @@ export default function PostInput() {
                                             <p className=' font-semibold'>Friends</p>
                                         </div>
                                         {
-                                            friendsProfile.map((friend: userProfileType) => {
-                                                return (
-                                                    <UserProfile key={friend.idUser} friend={friend} />
-                                                );
-                                            })
+                                            // friendsProfile.map((friend: userProfileType) => {
+                                            //     return (
+                                            //         <SelectUserProfile 
+                                            //             key={friend.idUser} 
+                                            //             friend={friend}
+                                            //             type={'specific'}
+                                            //         />
+                                            //     );
+                                            // })
                                         }
-                                        
                                     </div>
                                 )
 
@@ -440,10 +452,8 @@ export default function PostInput() {
                     })()}
                     
                 </form>
-
             </Modal>
-
         </div>
-    )
+    ) // End Return
 }
 

@@ -71,19 +71,15 @@ export default function SuggestedFriends() {
                         } 
                     });
 
-                    // Check if users in collection still available
+                    // Check if suggested users in collection still available
                     if(querySnapshots.docs.length < 5){
                         break
                     }
 
                 }
             }
-
             setSuggestedFriends(suggested)
-
-        } catch (error) {
-            
-        }
+        } catch (error) { }
 
     }
 
