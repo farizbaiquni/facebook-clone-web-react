@@ -1,6 +1,7 @@
 import React, { memo, useState } from 'react'
 
-type userProfileType = {
+
+type propsType = {
     key: string,
     friend: {
       idUser: string
@@ -8,13 +9,15 @@ type userProfileType = {
       name: string
     },
     type: 'except' | 'specific',
-    addAccessExceptions: (data: String) => void,
-    removeAccesExceptions: (data: String) => void,
+    addAccessExceptions: (idUser: String) => void,
+    removeAccesExceptions: (idUser: String) => void,
+    isChecked: boolean,
 }
 
-function SelectUserProfile(props: userProfileType) {
+
+function SelectUserProfile(props: propsType) {
   
-  const [isChecked, setIsChecked] = useState(false)
+  const [isChecked, setIsChecked] = useState<boolean>(props.isChecked)
   const [exceptIconColor, setExceptIconColor] = useState('gray')
 
   const handleChecked = () => {
@@ -27,17 +30,25 @@ function SelectUserProfile(props: userProfileType) {
   }
 
   return (
+
     <div className=' flex items-center py-3 cursor-pointer group mx-1' 
       onClick={ () => handleChecked()}
       onMouseOver={() => (!isChecked && props.type === 'except') && setExceptIconColor('red')} 
       onMouseLeave={() => (!isChecked && props.type === 'except') && setExceptIconColor('gray') }
     >
 
+
       { 
-        (props.friend.photoUrl.length <= 0) ? (<img src={process.env.PUBLIC_URL + './example_story.jpg'} alt="facebook" className=' rounded-full w-9 h-9' /> ) : ( <img src={props.friend.photoUrl} alt="facebook" className=' rounded-full w-9 h-9' /> )
+        (props.friend.photoUrl.length <= 0) ? (
+          <img src={process.env.PUBLIC_URL + './example_story.jpg'} alt="facebook" className=' rounded-full w-9 h-9' /> 
+        ) : ( 
+          <img src={props.friend.photoUrl} alt="facebook" className=' rounded-full w-9 h-9' /> 
+        )
       }
 
+
       <h1 className=' flex-1 ml-3 font-semibold line-clamp-1'>{props.friend.name}</h1>
+
 
       {
         props.type === 'except' ? (
@@ -52,8 +63,9 @@ function SelectUserProfile(props: userProfileType) {
       }
       
     </div>
-  )
+
+  )// End return
   
-}
+}// End function
 
 export default memo(SelectUserProfile)

@@ -1,11 +1,14 @@
 import { async } from '@firebase/util';
-import { collection, doc, DocumentData, getDoc, getDocs, getFirestore, limit, orderBy, query, QueryDocumentSnapshot, QuerySnapshot, startAfter, Timestamp, writeBatch } from 'firebase/firestore';
-import React, { createRef, lazy, Suspense, useContext, useEffect, useState } from 'react'
+import { collection, doc, DocumentData, getDoc, getDocs, getFirestore, limit, orderBy, query, QueryDocumentSnapshot, QuerySnapshot, startAfter, Timestamp, where, writeBatch } from 'firebase/firestore';
+import React, { createRef, lazy, RefObject, Suspense, useContext, useEffect, useState } from 'react'
 import Modal from 'react-modal';
 import { AuthContext } from '../../contexts/AuthContext';
 import SelectUserProfile from './SelectUserProfile';
 import * as modalPostInputConstants from '../../constants/ModalPostInput'
 import ModalAccessExceptFriends from './ModalAccessExceptFriends';
+import ModalAccessSpecificFriends from './ModalAccessSpecificFriends';
+import { UserContext } from '../../contexts/UserContext';
+import ModalAccessOption from './ModalAccessOption';
 
 
 type userProfileType = {
@@ -36,20 +39,22 @@ export default function PostInput() {
 
     const db = getFirestore()
     const authUser = useContext(AuthContext)
+    const user = useContext(UserContext)
   
     const [modalIsOpen, setIsOpen] = React.useState(false);
-    const openModal = () => setIsOpen(true)
-    const closeModal = () => setIsOpen(false)
+    const openModal = () => { setIsOpen(true); document.body.style.overflow = 'hidden' }
+    const closeModal = () => { setIsOpen(false); document.body.style.overflow = 'unset' }
 
     const [friendsProfile, setFriendsProfile] = useState<Array<userProfileType>>([])
+    const [indexFetchFriendsProfile, setIndexFetchFriendsProfile] = useState<number>(0)
     const [modalShowSpecific, setModalShowSpecific] = useState(modalShowOption.main)
     const [lastVisibleFriends, setLastVisibleFriends] = useState< QueryDocumentSnapshot<DocumentData> | undefined | null>(null)
     const [isFirstFetchFriendsDone, setIsFirstFetchFriendsDone] = useState<Boolean>(false)
 
-    const accessPublicRef = createRef<HTMLInputElement>()
-    const accessFriendscRef = createRef<HTMLInputElement>()
-    const accessOnlyMeRef = createRef<HTMLInputElement>()
-    const modalScrollDivRef = createRef<HTMLDivElement>()
+    const[accessPublicRef, setAccessPublicRef] = useState<RefObject<HTMLInputElement>>(createRef())
+    const[accessFriendscRef, setAccessFriendscRef] = useState<RefObject<HTMLInputElement>>(createRef())
+    const[accessOnlyMeRef, setAccessOnlyMeRef] = useState<RefObject<HTMLInputElement>>(createRef())
+    const[modalScrollDivRef, setModalScrollDivRef] = useState<RefObject<HTMLInputElement>>(createRef())
 
     const [textInput, setTextInput] = useState('')
     const [accessType, setAccessType] = useState(accessTypeOption.friends)
@@ -62,6 +67,17 @@ export default function PostInput() {
 
 
     console.log("DATA EXCEPT: " + accessExceptions)
+    console.log("FRIENDS PROFILE:" + user?.friends.slice(0, user.friends.length!!) )
+
+    const handleSetRef = (
+        publicRef: RefObject<HTMLInputElement>, 
+        friendsRef: RefObject<HTMLInputElement>, 
+        onlyMeRef: RefObject<HTMLInputElement> ) => {
+            setAccessPublicRef(publicRef)
+            setAccessFriendscRef(friendsRef)
+            setAccessOnlyMeRef(onlyMeRef)
+    }
+
 
     const handlePost = async() => {
 
@@ -123,50 +139,122 @@ export default function PostInput() {
 
     const firstFetchFriends = async() => {
         let friends: Array<userProfileType> = []
-        // Query the first page of docs
-        const first = query(collection(db, "userProfile"), orderBy("name"), limit(5));
-        const documentSnapshots = await getDocs(first);
-
-        // Get the last visible document
-        const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
-        if(documentSnapshots.docs.length > 0) {
-            documentSnapshots.docs.forEach( item => {
-                friends.push({ idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name })
-            })
-            setFriendsProfile(friends)
-            setLastVisibleFriends(lastVisible)
-            setIsFirstFetchFriendsDone(true)
-        } else {
-            setLastVisibleFriends(undefined)
-            setIsFirstFetchFriendsDone(true)
+        if(user != null && isFirstFetchFriendsDone === false){
+            if(user?.friends.length !== undefined){
+                if(user.friends.length >= 10){
+                    const first = query(collection( db, "userProfile"),  where("idUser", "in", user.friends.slice(0, 11)) )
+                    const documentSnapshots = await getDocs(first);
+                    documentSnapshots.docs.forEach( item => {
+                        friends.push({ idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name })
+                    })
+    
+                    const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
+                    setFriendsProfile(friends)
+                    setLastVisibleFriends(lastVisible)
+    
+                    setIndexFetchFriendsProfile(10)
+                    setIsFirstFetchFriendsDone(true)
+    
+                } else if(user.friends.length < 10 && user.friends.length >= 1){
+                    const first = query(collection( db, "userProfile"),  where("idUser", "in", user.friends.slice(0, user.friends.length)) )
+                    const documentSnapshots = await getDocs(first);
+                    documentSnapshots.docs.forEach( item => {
+                        friends.push({ idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name })
+                        console.log(item)
+                    })
+                    console.log(user.friends.slice(0, user.friends.length))
+    
+                    const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
+                    setFriendsProfile(friends)
+                    setLastVisibleFriends(lastVisible)
+                    setIndexFetchFriendsProfile(user.friends.length - 1)
+                    setIsFirstFetchFriendsDone(true)
+    
+                } else {
+                    setLastVisibleFriends(undefined)
+                    setIsFirstFetchFriendsDone(true)
+                }
+    
+                friends = []
+            }
         }
-        friends = []
+
+        // let friends: Array<userProfileType> = []
+        // // Query the first page of docs
+        // const first = query(collection(db, "userProfile"), orderBy("name"), limit(5));
+        // const documentSnapshots = await getDocs(first);
+
+        // // Get the last visible document
+        // const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
+        // if(documentSnapshots.docs.length > 0) {
+        //     documentSnapshots.docs.forEach( item => {
+        //         friends.push({ idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name })
+        //     })
+        //     setFriendsProfile(friends)
+        //     setLastVisibleFriends(lastVisible)
+        //     setIsFirstFetchFriendsDone(true)
+        // } else {
+        //     setLastVisibleFriends(undefined)
+        //     setIsFirstFetchFriendsDone(true)
+        // }
+        // friends = []
+
     }
 
 
     const nextFetchFriends = async() => {
+        
         let friends: Array<userProfileType> = friendsProfile
-        // Construct a new query starting at this document,
-        // get the next 25 cities.
-        const next = query(collection(db, "userProfile"),
-            orderBy("name"),
-            startAfter(lastVisibleFriends),
-            limit(2));
-
-        const documentSnapshots = await getDocs(next);
-
-        // Get the last visible document
-        const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
-        if(documentSnapshots.docs.length > 0) {
-            documentSnapshots.docs.forEach( item => {
-                friends.push( { idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name } )
-            })
-            setFriendsProfile(friends)
-            setLastVisibleFriends(lastVisible)
-        } else {
-            setLastVisibleFriends(undefined)
+        if(user !== null && lastVisibleFriends !== undefined){
+            if(user.friends.length !== undefined){
+                if(user.friends.length > ((indexFetchFriendsProfile - 1) + 5)){
+                    const first = query(
+                        collection( db, "userProfile"),  
+                        where("idUser", "in", user.friends.slice(indexFetchFriendsProfile, indexFetchFriendsProfile + 5)) 
+                    )
+                    const documentSnapshots = await getDocs(first);
+                    documentSnapshots.docs.forEach( item => {
+                        friends.push({ idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name })
+                    })
+                } else if(user.friends.length === ((indexFetchFriendsProfile - 1) + 5) ){
+                    const first = query(
+                        collection( db, "userProfile"),  
+                        where("idUser", "in", user.friends.slice(indexFetchFriendsProfile, user.friends.length)) 
+                    )
+                    const documentSnapshots = await getDocs(first);
+                    documentSnapshots.docs.forEach( item => {
+                        friends.push({ idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name })
+                    })
+                    setLastVisibleFriends(undefined)
+                } else {
+                    setLastVisibleFriends(undefined)
+                }
+            }
         }
         friends = []
+
+        // let friends: Array<userProfileType> = friendsProfile
+        // // Construct a new query starting at this document,
+        // // get the next 25 cities.
+        // const next = query(collection(db, "userProfile"),
+        //     orderBy("name"),
+        //     startAfter(lastVisibleFriends),
+        //     limit(2));
+
+        // const documentSnapshots = await getDocs(next);
+
+        // // Get the last visible document
+        // const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
+        // if(documentSnapshots.docs.length > 0) {
+        //     documentSnapshots.docs.forEach( item => {
+        //         friends.push( { idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name } )
+        //     })
+        //     setFriendsProfile(friends)
+        //     setLastVisibleFriends(lastVisible)
+        // } else {
+        //     setLastVisibleFriends(undefined)
+        // }
+        // friends = []
     }
 
 
@@ -282,166 +370,43 @@ export default function PostInput() {
                                 
                             case modalShowOption.access:
                                 return (
-                                    <div className=' overflow-x-hidden overflow-y-auto'>
-                                        {/* Top bar modal */}
-                                        <div className=' flex items-center'>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 cursor-pointer" viewBox="0 0 20 20" fill="currentColor" onClick={ () =>
-                                                setModalShowSpecific(modalShowOption.main) }>
-                                                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/>
-                                            </svg>
-                                            <p className=' flex-1 text-center text-lg font-bold'>Select audience</p>
-                                        </div>
-
-                                        <div className=" flex flex-col mt-5">
-                                            <p className=' font-semibold text-base'>Who can see your post?</p>
-                                            <p className=' font-thin text-slate-500'>Your post will show up in Feed, on your profile and in search results.</p>
-                                        </div>
-
-                                        {/* content modal */}
-                                        <div className=' flex flex-col mr-3'>
-                                            <div className=" flex items-center group py-3 cursor-pointer mt-3" onClick={() => { 
-                                                accessPublicRef.current?.click(); 
-                                                setAccessType(accessTypeOption.public); 
-                                                setTimeout( function(){  
-                                                    setModalShowSpecific(modalShowOption.main);
-                                                }, 200)
-                                            }}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 p-3 rounded-full group-hover:bg-gray-300 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                                                </svg>
-                                                <span className="flex flex-col flex-1">
-                                                    <p className=' text-base font-semibold'>Public</p>
-                                                    <p className=' text-slate-500'>Anyone on or off Facebook</p>
-                                                </span>
-                                                <input type="radio" className=' scale-150 mr-1' ref={accessPublicRef} name="accessRadio" defaultChecked={accessType === accessTypeOption.public ? true : false}/>
-                                            </div>
-                                            <div className=" flex items-center group py-3 cursor-pointer" onClick={() => { 
-                                                setAccessType(accessTypeOption.friends);
-                                                accessFriendscRef.current?.click(); 
-                                                setTimeout( function(){  
-                                                    setModalShowSpecific(modalShowOption.main);
-                                                }, 200)
-                                            }}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 p-3 rounded-full group-hover:bg-gray-300 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                                                </svg>
-                                                <span className="flex flex-col flex-1">
-                                                    <p className=' text-base font-semibold'>Friends</p>
-                                                    <p className=' text-slate-500'>Your friends on facebook</p>
-                                                </span>
-                                                <input type="radio" className=' scale-150 mr-1' ref={accessFriendscRef} name="accessRadio" defaultChecked={accessType === accessTypeOption.friends ? true : false} />
-                                            </div>
-                                            <div className=" flex items-center group py-3 cursor-pointer" onClick={() => { setModalShowSpecific(modalShowOption.except) }}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 p-3 rounded-full group-hover:bg-gray-300 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path d="M11 6a3 3 0 11-6 0 3 3 0 016 0zM14 17a6 6 0 00-12 0h12zM13 8a1 1 0 100 2h4a1 1 0 100-2h-4z" />
-                                                </svg>
-                                                <span className="flex flex-col flex-1">
-                                                    <p className=' text-base font-semibold'>Friends except...</p>
-                                                    <p className=' text-slate-500'>Don't show to some friends</p>
-                                                </span>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="gray" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                                </svg>
-                                            </div>
-                                            <div className=" flex items-center group py-3 cursor-pointer" onClick={() => { setModalShowSpecific(modalShowOption.specific) }}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 p-3 rounded-full group-hover:bg-gray-300 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                                                </svg>
-                                                <span className="flex flex-col flex-1">
-                                                    <p className=' text-base font-semibold'>Specific friends</p>
-                                                    <p className=' text-slate-500'>Only show to some friends</p>
-                                                </span>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="gray" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                                </svg>
-                                            </div>
-                                            <div className=" flex items-center group py-3 cursor-pointer" onClick={ () => { 
-                                                accessOnlyMeRef.current?.click();
-                                                setAccessType(accessTypeOption.onlyMe); 
-                                                setTimeout( function(){  
-                                                    setModalShowSpecific(modalShowOption.main);
-                                                }, 200)}
-                                            }>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 p-3 rounded-full group-hover:bg-gray-300 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                                </svg>
-                                                <span className="flex flex-col flex-1">
-                                                    <p className=' text-base font-semibold'>Only me</p>
-                                                </span>
-                                                <input type="radio" className=' scale-150 mr-1' ref={accessOnlyMeRef} name="accessRadio" defaultChecked={accessType === accessTypeOption.onlyMe ? true : false}/>
-                                            </div>
-                                            <div className=" flex items-center group py-3 cursor-pointer">
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 p-3 rounded-full group-hover:bg-gray-300 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                                                </svg>
-                                                <span className="flex flex-col flex-1">
-                                                    <p className=' text-base font-semibold'>Custom</p>
-                                                    <p className=' text-slate-500'>Include and exclude friends and lists</p>
-                                                </span>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="gray" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    
-                                    </div>
+                                    <ModalAccessOption
+                                        setModalShowSpecific = { (data: string) => setModalShowSpecific(data)}
+                                        setAccessType = { (data: string) => setAccessType(data)}
+                                        accessType = { accessType }
+                                        handleSetRef = { 
+                                            ( publicRef: RefObject<HTMLInputElement>, 
+                                                friendsRef: RefObject<HTMLInputElement>, 
+                                                onlyMeRef: RefObject<HTMLInputElement>,
+                                            ) => 
+                                                handleSetRef(publicRef, friendsRef, onlyMeRef)
+                                        }
+                                    />
                                 )
 
                             case modalShowOption.except:
                                 (isFirstFetchFriendsDone === false) && firstFetchFriends()
                                 return (
-                                    <div className=' overflow-x-hidden overflow-y-scroll' ref={modalScrollDivRef} onScroll={scrollModal}>
-                                        {/* Top bar modal */}
-                                        <div className=' flex items-center'>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 cursor-pointer" viewBox="0 0 20 20" fill="currentColor" onClick={ () =>
-                                                setModalShowSpecific(modalShowOption.access) }>
-                                                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/>
-                                            </svg>
-                                            <p className=' flex-1 text-center text-lg font-bold'>Friends Except...</p>
-                                        </div>
-
+                                    <div className='' ref={modalScrollDivRef} onScroll={scrollModal}>
                                         <ModalAccessExceptFriends 
                                             friendsProfile = {friendsProfile} 
                                             setAccessExceptions = { (data: Array<String>) => setAccessExceptions(data) }
-                                        />
-                                        
+                                            setModalShowSpecific = { (data: string) => setModalShowSpecific(data) }
+                                            accessExceptions = {new Set(accessExceptions)}
+                                        />                                       
                                     </div>
                                 )
                             
                             case modalShowOption.specific:
                                 (isFirstFetchFriendsDone === false) && firstFetchFriends()
                                 return (
-                                    <div className=' overflow-x-hidden overflow-y-scroll' ref={modalScrollDivRef} onScroll={scrollModal}>
-                                        {/* Top bar modal */}
-                                        <div className=' flex items-center'>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 cursor-pointer" viewBox="0 0 20 20" fill="currentColor" onClick={ () =>
-                                                setModalShowSpecific(modalShowOption.access) }>
-                                                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/>
-                                            </svg>
-                                            <p className=' flex-1 text-center text-lg font-bold'>Specific Friends</p>
-                                        </div>
-
-                                        <div className=' flex mt-10 items-center'>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="gray">
-                                                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                                            </svg>
-                                            <input type="text" placeholder='Search for a friend or list...' className=' flex-1 focus:outline-none'/>
-                                        </div>
-
-                                        <div className=' mt-5'>
-                                            <p className=' font-semibold'>Friends</p>
-                                        </div>
-                                        {
-                                            // friendsProfile.map((friend: userProfileType) => {
-                                            //     return (
-                                            //         <SelectUserProfile 
-                                            //             key={friend.idUser} 
-                                            //             friend={friend}
-                                            //             type={'specific'}
-                                            //         />
-                                            //     );
-                                            // })
-                                        }
+                                    <div className='' ref={modalScrollDivRef} onScroll={scrollModal}>
+                                        <ModalAccessSpecificFriends 
+                                            friendsProfile = {friendsProfile} 
+                                            setAccessExceptions = { (data: Array<String>) => setAccessExceptions(data) }
+                                            setModalShowSpecific = { (data: string) => setModalShowSpecific(data) }
+                                            accessExceptions = { new Set(accessExceptions) }
+                                        />
                                     </div>
                                 )
 

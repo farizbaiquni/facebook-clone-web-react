@@ -1,10 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
+import { UserContext } from '../../contexts/UserContext';
 import ProfilePopUpMenu from './ProfilePopUpMenu';
 
 export default function Navbar() {
 
   const [isMorePofileVisible, setIsMorePofileVisible] = useState(false);
   const elementRef = useRef<any>(null);
+
+  const user = useContext(UserContext)
 
   const handleClickOutside = (event: MouseEvent) => {
       if (elementRef.current && !elementRef.current.contains(event.target)) {
@@ -78,7 +81,7 @@ export default function Navbar() {
       <div className="right flex items-center">
         <span className="profile flex items-center">
           <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="photo_profile" className=' h-8 w-8 rounded-full cursor-pointer' />
-          <p className=' ml-1 font-semibold cursor-pointer'>Baiquni</p>
+          <p className=' ml-1 font-semibold cursor-pointer line-clamp-1'>{user?.firstName + " " + user?.lastName}</p>
         </span>
 
         <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9 mx-5 p-1 rounded-full cursor-pointer hover:bg-slate-300" viewBox="0 0 20 20" fill="currentColor">

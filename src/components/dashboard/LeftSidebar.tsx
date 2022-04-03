@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
+import { UserContext } from '../../contexts/UserContext'
 
 export default function LeftSidebar() {
 
+    let user = useContext(UserContext)
     const[seeMore, setSeeMore] = useState(false)
 
     const handleSeeMore = () => {
@@ -16,7 +18,7 @@ export default function LeftSidebar() {
                     <td>
                         <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="icon friends" className=' h-9 w-9 rounded-full'/>
                     </td>
-                    <td className=' pl-3 font-medium cursor-pointer text-left' >Fariz Baiquni</td>
+                    <td className=' pl-3 font-medium cursor-pointer text-left line-clamp-1' >{user?.firstName + " " + user?.lastName}</td>
                 </tr>
 
                 <tr className=''>
