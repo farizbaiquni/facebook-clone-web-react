@@ -30,9 +30,9 @@ idList: String
 
 
 SEARCH_POSTS
+idPost,
 access_type<public friends, friends_except, specific_friends, only_me, custom>,
 access_allowed[]
-
 
 
 POSTS  

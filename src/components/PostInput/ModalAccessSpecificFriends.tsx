@@ -1,32 +1,35 @@
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useEffect, useState } from 'react'
 import { modalShowOption} from '../../constants/ModalPostInput'
 import type { userProfileType } from '../../constants/EntityType'
 import SelectUserProfile from './SelectUserProfile'
+import { accessTypeOption } from '../../constants/ModalPostInput'
 
 
 type propsType = {
     friendsProfile: userProfileType[],
-    setAccessExceptions: (data: Array<String>) => void, 
     setModalShowSpecific: (data: string) => void, 
-    accessExceptions: Set<String>,
+    setAccessType: (data: string) => void,
+    accessFriendsState: Array<String>,
+    setAccessFriendsState: (data: Array<String>) => void, 
+    setAccessAllowed: (data: Array<String>) => void, 
 }
 
 
 function ModalAccessSpecificFriends(props: propsType) {
-
-    const accessExceptions = new Set()
     
-    props.friendsProfile.map( data => accessExceptions.add(data.idUser))
+    const [accessFriendsState, setAccessFriendsState] = useState(new Set<String>(props.accessFriendsState))
+    console.log(accessFriendsState)
     
-    function addAccessExceptions(idUser: String){
-        accessExceptions.add(idUser)
-        console.log(accessExceptions)
+    function addFriendsState(idUser: String){
+        accessFriendsState.add(idUser)
+        console.log(accessFriendsState)
+    }
+    
+    function removeFriendsState(idUser: String){
+        accessFriendsState.delete(idUser)
+        console.log(accessFriendsState)
     }
 
-    function removeAccesExceptions(idUser: String){
-        accessExceptions.delete(idUser)
-        console.log(accessExceptions)
-    }
     
     return (
         <Fragment >
@@ -59,9 +62,9 @@ function ModalAccessSpecificFriends(props: propsType) {
                                 key={friend.idUser} 
                                 friend={friend} 
                                 type={'specific'} 
-                                addAccessExceptions={ (data: String) => removeAccesExceptions(data) }
-                                removeAccesExceptions={ (data: String) => addAccessExceptions(data) }
-                                isChecked={!props.accessExceptions.has(friend.idUser)}
+                                addAccessExceptions={(data: String) => addFriendsState(data)}
+                                removeAccessExceptions={(data: String) => removeFriendsState(data)}
+                                isChecked={accessFriendsState.has(friend.idUser)}
                             />
                         );
                     })
@@ -78,8 +81,10 @@ function ModalAccessSpecificFriends(props: propsType) {
                     type='button'
                     className=' bg-blue-600 rounded-md py-2 px-7 font-semibold text-sm ml-3 text-white' 
                     onClick={ () =>{
-                        props.setAccessExceptions(Array.from(accessExceptions) as String[]);
+                        props.setAccessFriendsState(Array.from(accessFriendsState) as String[]);
+                        props.setAccessAllowed(Array.from(accessFriendsState) as String[])
                         props.setModalShowSpecific(modalShowOption.main)
+                        props.setAccessType(accessTypeOption.specific)
                     }}>
                         Save Changes
                 </button>

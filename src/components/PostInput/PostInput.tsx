@@ -1,9 +1,7 @@
-import { async } from '@firebase/util';
-import { collection, doc, DocumentData, getDoc, getDocs, getFirestore, limit, orderBy, query, QueryDocumentSnapshot, QuerySnapshot, startAfter, Timestamp, where, writeBatch } from 'firebase/firestore';
-import React, { createRef, lazy, RefObject, Suspense, useContext, useEffect, useState } from 'react'
+import { collection, doc, DocumentData, getDoc, getDocs, getFirestore, query, QueryDocumentSnapshot, Timestamp, where, writeBatch } from 'firebase/firestore';
+import React, { createRef, RefObject, useContext, useState } from 'react'
 import Modal from 'react-modal';
 import { AuthContext } from '../../contexts/AuthContext';
-import SelectUserProfile from './SelectUserProfile';
 import * as modalPostInputConstants from '../../constants/ModalPostInput'
 import ModalAccessExceptFriends from './ModalAccessExceptFriends';
 import ModalAccessSpecificFriends from './ModalAccessSpecificFriends';
@@ -51,14 +49,14 @@ export default function PostInput() {
     const [lastVisibleFriends, setLastVisibleFriends] = useState< QueryDocumentSnapshot<DocumentData> | undefined | null>(null)
     const [isFirstFetchFriendsDone, setIsFirstFetchFriendsDone] = useState<Boolean>(false)
 
-    const[accessPublicRef, setAccessPublicRef] = useState<RefObject<HTMLInputElement>>(createRef())
-    const[accessFriendscRef, setAccessFriendscRef] = useState<RefObject<HTMLInputElement>>(createRef())
-    const[accessOnlyMeRef, setAccessOnlyMeRef] = useState<RefObject<HTMLInputElement>>(createRef())
-    const[modalScrollDivRef, setModalScrollDivRef] = useState<RefObject<HTMLInputElement>>(createRef())
+    const [modalScrollDivRef, setModalScrollDivRef] = useState<RefObject<HTMLInputElement>>(createRef())
+    
+    const [accessFriendsState, setAccessFriendsState] = useState<Array<String>>([])
+    const [accessExceptionsState, setAccessExceptionsState] = useState<Array<String>>([])
 
     const [textInput, setTextInput] = useState('')
     const [accessType, setAccessType] = useState(accessTypeOption.friends)
-    const [accessExceptions, setAccessExceptions] = useState<Array<String>>([])
+    const [accessAllowed, setAccessAllowed] = useState<Array<String>>([])
     const [contentType, setContentType] = useState('text-only')
     const [content, setContent] = useState<Object | null>(null)
     const [feeling, setFeeling] = useState(null)
@@ -66,17 +64,8 @@ export default function PostInput() {
     const [tag, setTag] = useState<Array<Object> | null>(null)
 
 
-    console.log("DATA EXCEPT: " + accessExceptions)
-    console.log("FRIENDS PROFILE:" + user?.friends.slice(0, user.friends.length!!) )
-
-    const handleSetRef = (
-        publicRef: RefObject<HTMLInputElement>, 
-        friendsRef: RefObject<HTMLInputElement>, 
-        onlyMeRef: RefObject<HTMLInputElement> ) => {
-            setAccessPublicRef(publicRef)
-            setAccessFriendscRef(friendsRef)
-            setAccessOnlyMeRef(onlyMeRef)
-    }
+    console.log("USER ALLOWED: " + accessAllowed + ", ISINYA: " + accessAllowed.length)
+    //console.log("FRIENDS PROFILE:" + user?.friends.slice(0, user.friends.length!!) )
 
 
     const handlePost = async() => {
@@ -85,8 +74,6 @@ export default function PostInput() {
         const docUserSnap = await getDoc(authUserRef);
         
         if(docUserSnap.exists()){
-
-            const filteredAllowed = removeSpecificArray(docUserSnap.data().friends, new Set(accessExceptions))
 
             const batch = writeBatch(db) 
 
@@ -117,25 +104,15 @@ export default function PostInput() {
             // Add data to search posts collection
             const searchPostsRef = doc(db, 'searchPosts', postRef.id)
             batch.set(searchPostsRef, {
+                idPost: postRef.id,
                 accessType,
-                accessAllowed: filteredAllowed
+                accessAllowed: accessAllowed
             })
 
         }else{
             alert("Something went wrong")
         }        
     }
-
-    
-    function removeSpecificArray(array: Array<string>, toRemove: Set<String>){
-        if(toRemove.size > 0){
-            const different = array.filter( data => !toRemove.has(data))
-            return different
-        } else {
-            return array
-        }
-    }
-
 
     const firstFetchFriends = async() => {
         let friends: Array<userProfileType> = []
@@ -179,31 +156,10 @@ export default function PostInput() {
             }
         }
 
-        // let friends: Array<userProfileType> = []
-        // // Query the first page of docs
-        // const first = query(collection(db, "userProfile"), orderBy("name"), limit(5));
-        // const documentSnapshots = await getDocs(first);
-
-        // // Get the last visible document
-        // const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
-        // if(documentSnapshots.docs.length > 0) {
-        //     documentSnapshots.docs.forEach( item => {
-        //         friends.push({ idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name })
-        //     })
-        //     setFriendsProfile(friends)
-        //     setLastVisibleFriends(lastVisible)
-        //     setIsFirstFetchFriendsDone(true)
-        // } else {
-        //     setLastVisibleFriends(undefined)
-        //     setIsFirstFetchFriendsDone(true)
-        // }
-        // friends = []
-
     }
 
 
     const nextFetchFriends = async() => {
-        
         let friends: Array<userProfileType> = friendsProfile
         if(user !== null && lastVisibleFriends !== undefined){
             if(user.friends.length !== undefined){
@@ -216,6 +172,7 @@ export default function PostInput() {
                     documentSnapshots.docs.forEach( item => {
                         friends.push({ idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name })
                     })
+                    setFriendsProfile(friends)
                 } else if(user.friends.length === ((indexFetchFriendsProfile - 1) + 5) ){
                     const first = query(
                         collection( db, "userProfile"),  
@@ -225,6 +182,7 @@ export default function PostInput() {
                     documentSnapshots.docs.forEach( item => {
                         friends.push({ idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name })
                     })
+                    setFriendsProfile(friends)
                     setLastVisibleFriends(undefined)
                 } else {
                     setLastVisibleFriends(undefined)
@@ -233,28 +191,6 @@ export default function PostInput() {
         }
         friends = []
 
-        // let friends: Array<userProfileType> = friendsProfile
-        // // Construct a new query starting at this document,
-        // // get the next 25 cities.
-        // const next = query(collection(db, "userProfile"),
-        //     orderBy("name"),
-        //     startAfter(lastVisibleFriends),
-        //     limit(2));
-
-        // const documentSnapshots = await getDocs(next);
-
-        // // Get the last visible document
-        // const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
-        // if(documentSnapshots.docs.length > 0) {
-        //     documentSnapshots.docs.forEach( item => {
-        //         friends.push( { idUser: item.data().idUser, photoUrl: item.data().photoUrl, name: item.data().name } )
-        //     })
-        //     setFriendsProfile(friends)
-        //     setLastVisibleFriends(lastVisible)
-        // } else {
-        //     setLastVisibleFriends(undefined)
-        // }
-        // friends = []
     }
 
 
@@ -321,11 +257,11 @@ export default function PostInput() {
                                             <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="profile" className='h-10 w-10 rounded-full cursor-pointer'/>
                                             <span className='ml-3'>
                                                 <p className=' font-semibold'>{authUser?.displayName}</p>
-                                                <span className='flex items-center cursor-pointer' onClick={() => setModalShowSpecific(modalShowOption.access)}>
+                                                <span className='flex items-center cursor-pointer bg-slate-200 rounded p-1' onClick={() => setModalShowSpecific(modalShowOption.access)}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                                                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clipRule="evenodd" />
                                                         </svg>
-                                                        <p className=' font-semibold text-sm'>{accessType}</p>
+                                                        <p className=' font-semibold text-xs'>{accessType}</p>
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml1" viewBox="0 0 20 20" fill="currentColor">
                                                             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                                                         </svg>
@@ -364,7 +300,7 @@ export default function PostInput() {
                                             </span>
                                         </div>
 
-                                        <button type='button' disabled={ textInput.length < 0 && true} className={` mt-5 rounded-md py-2 font-semibold ${textInput.length <= 0 ? 'bg-transparent text-gray-500' : ' bg-blue-600 text-white'}`}>Post</button>
+                                        <button type='button' disabled={ textInput.length < 0 && true} className={` mt-5 rounded-md py-2 font-semibold ${textInput.length <= 0 ? 'bg-slate-200 text-gray-500' : ' bg-blue-600 text-white'}`}>Post</button>
                                     </div>
                                 )
                                 
@@ -374,13 +310,8 @@ export default function PostInput() {
                                         setModalShowSpecific = { (data: string) => setModalShowSpecific(data)}
                                         setAccessType = { (data: string) => setAccessType(data)}
                                         accessType = { accessType }
-                                        handleSetRef = { 
-                                            ( publicRef: RefObject<HTMLInputElement>, 
-                                                friendsRef: RefObject<HTMLInputElement>, 
-                                                onlyMeRef: RefObject<HTMLInputElement>,
-                                            ) => 
-                                                handleSetRef(publicRef, friendsRef, onlyMeRef)
-                                        }
+                                        idFriends = { (user?.friends !== undefined) ? user.friends!! : [] as String[] }
+                                        setAccessAllowed = { (data: Array<String>) => setAccessAllowed(data) }
                                     />
                                 )
 
@@ -390,9 +321,12 @@ export default function PostInput() {
                                     <div className='' ref={modalScrollDivRef} onScroll={scrollModal}>
                                         <ModalAccessExceptFriends 
                                             friendsProfile = {friendsProfile} 
-                                            setAccessExceptions = { (data: Array<String>) => setAccessExceptions(data) }
+                                            setAccessAllowed = { (data: Array<String>) => setAccessAllowed(data) }
                                             setModalShowSpecific = { (data: string) => setModalShowSpecific(data) }
-                                            accessExceptions = {new Set(accessExceptions)}
+                                            accessExceptionsState = { accessExceptionsState }
+                                            setAccessExceptionsState = { (data: Array<String>) => setAccessExceptionsState(data) }
+                                            setAccessType = { (data: string) => setAccessType(data) }
+                                            idFriends = { (user?.friends !== undefined) ? (user?.friends!!) : ([]) }
                                         />                                       
                                     </div>
                                 )
@@ -403,9 +337,11 @@ export default function PostInput() {
                                     <div className='' ref={modalScrollDivRef} onScroll={scrollModal}>
                                         <ModalAccessSpecificFriends 
                                             friendsProfile = {friendsProfile} 
-                                            setAccessExceptions = { (data: Array<String>) => setAccessExceptions(data) }
+                                            setAccessAllowed = { (data: Array<String>) => setAccessAllowed(data) }
                                             setModalShowSpecific = { (data: string) => setModalShowSpecific(data) }
-                                            accessExceptions = { new Set(accessExceptions) }
+                                            accessFriendsState = { accessFriendsState }
+                                            setAccessFriendsState = { (data: Array<String>) => setAccessFriendsState(data) }
+                                            setAccessType = { (data: string) => setAccessType(data) }
                                         />
                                     </div>
                                 )

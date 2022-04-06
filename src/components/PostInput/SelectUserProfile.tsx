@@ -10,7 +10,7 @@ type propsType = {
     },
     type: 'except' | 'specific',
     addAccessExceptions: (idUser: String) => void,
-    removeAccesExceptions: (idUser: String) => void,
+    removeAccessExceptions: (idUser: String) => void,
     isChecked: boolean,
 }
 
@@ -22,7 +22,7 @@ function SelectUserProfile(props: propsType) {
 
   const handleChecked = () => {
     if(isChecked){
-      props.removeAccesExceptions(props.friend.idUser)
+      props.removeAccessExceptions(props.friend.idUser)
     } else {
       props.addAccessExceptions(props.friend.idUser)
     }
@@ -31,7 +31,7 @@ function SelectUserProfile(props: propsType) {
 
   return (
 
-    <div className=' flex items-center py-3 cursor-pointer group mx-1' 
+    <div className=' flex items-center py-3 cursor-pointer group mx-1 mr-4' 
       onClick={ () => handleChecked()}
       onMouseOver={() => (!isChecked && props.type === 'except') && setExceptIconColor('red')} 
       onMouseLeave={() => (!isChecked && props.type === 'except') && setExceptIconColor('gray') }

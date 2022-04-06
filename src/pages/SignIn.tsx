@@ -55,7 +55,7 @@ export const SignIn = () => {
 
     const createDataUSer = async () => {
         await updateProfile(auth.currentUser!!, {
-            displayName: firstName + lastName
+            displayName: firstName + " " + lastName
 
           }).then(() => {
             addDataAfterCreateUser()
