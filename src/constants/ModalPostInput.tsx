@@ -13,3 +13,12 @@ export const accessTypeOption = {
     specific: 'Specific',
     onlyMe: 'Only me',
 }
+
+export const postType = {
+    textOnly: "text-only",
+    singleImage: "single-image",
+    multipleImage: "multiple-image",
+    gif: "gif",
+    qna: "qna",
+    event: "event"
+}

@@ -33,48 +33,63 @@ SEARCH_POSTS
 idPost,
 access_type<public friends, friends_except, specific_friends, only_me, custom>,
 access_allowed[]
+created_at  
 
 
-POSTS  
-id_user,
-textPost,
-feeling,
-location,
-tag[{idUser, name}],
-content_type <text-only, photo-video, gif, qna>,
-content []<URL: String> <gif / photo-video / qna / event / live>
-share   {total, [idUser] -> maksimal array 20},
-create-at,
-like    {total, [idUser] -> maksimal array 20},
-love    {total, [idUser] -> maksimal array 20},
-care    {total, [idUser] -> maksimal array 20},
-haha    {total, [idUser] -> maksimal array 20},
-wow     {total, [idUser] -> maksimal array 20},
-sad     {total, [idUser] -> maksimal array 20},
-angry   {total, [idUser] -> maksimal array 20},
-displayed_comment {
-    idUser,
-    text,
-    content_attach {url, type<gif / photo : string>}
-    create_at,
-    replay [idComment: string],
-    total_like  : int,
-    total_love  : int,
-    total_care  : int,
-    total_haha  : int,
-    total_wow   : int,
-    total_sad   : int,
-    total_angry : int,
-    COMMENTS_REACT_DETAIL
-}
-POST_REACT_DETAILS -> collection di luar post,
+POSTS
+id_post  
+id_user
+username
+textPost
+feeling
+location
+tag_total                   : number
+tag_names                   : Array<string>      
+content_type                : String                -> <text-only, photo-video, gif, qna>,
+content_attachment          : Array<URL: String>    -> <gif / photo-video / qna / event / live>
+share_total                 : number
+share_names                 : Array<string>         -> maksimal 8
+create-at                   : Date
+react_names_like
+react_names_love
+react_names_care
+react_names_haha
+react_names_wow
+react_names_sad
+react_names_angry  
+react_total_like
+react_total_love
+react_total_care
+react_total_haha
+react_total_wow
+react_total_sad
+react_total_angry
+defaultDisplayedComment     : Object <
+        comment_id                                                  : string, 
+        comment_id_user                                             : string,
+        comment_text                                                : string,
+        comment_content_attach {url, type<gif / photo : string>}    : string
+        comment_create_at                                           : date,
+        comment_replay                                              : [idComment: string] -> max 20 array,
+        comment_total_like                                          : int,
+        comment_total_love                                          : int,
+        comment_total_care                                          : int,
+        comment_total_haha                                          : int,
+        comment_total_wow                                           : int,
+        comment_total_sad                                           : int,
+>
 COMMENTS -> collection di luar post,
 
 
 
-POST_REACT_DETAILS  (Berhubungan dengan collection posts)
-idUser,
-type,
+USER_REACT_POSTS  (Berhubungan dengan collection posts) -> ID-nya = id_user -> berbasis user
+like    [id_post]
+love    [id_post]
+care    [id_post]
+haha    [id_post]
+wow     [id_post]
+sad     [id_post]
+angry   [id_post]
 
 
 

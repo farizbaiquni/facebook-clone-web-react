@@ -1,9 +1,15 @@
-import React from 'react'
+import React, { memo } from 'react'
 
-export default function TextStatusPost() {
+type propsType = {
+  textStatusPost: string
+}
+
+function TextStatusPost(props: propsType) {
   return (
     <div className="status text-left mt-3">
-      <h1 className=''>Hi, this is my status</h1>
+      <h1 className=''>{ props.textStatusPost }</h1>
     </div>
   )
 }
+
+export default memo(TextStatusPost)

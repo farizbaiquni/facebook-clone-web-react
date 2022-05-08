@@ -1,4 +1,4 @@
-import { addDoc, arrayRemove, arrayUnion, collection, deleteDoc, doc, getFirestore, runTransaction, setDoc, Timestamp, updateDoc } from 'firebase/firestore'
+import { arrayRemove, arrayUnion, collection, doc, getFirestore, runTransaction, Timestamp } from 'firebase/firestore'
 import React, { useContext, useState } from 'react'
 import { AuthContext } from '../../contexts/AuthContext'
 

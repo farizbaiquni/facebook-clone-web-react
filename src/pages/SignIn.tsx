@@ -3,7 +3,7 @@ import Modal from 'react-modal';
 import { getAuth, createUserWithEmailAndPassword,
     signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { FirebaseContext } from '../contexts/FirebaseContext';
-import { doc, setDoc, getFirestore, serverTimestamp, Timestamp, writeBatch } from "firebase/firestore";
+import { doc, getFirestore, Timestamp, writeBatch } from "firebase/firestore";
 
 const customStyles = {
     overlay: {
@@ -35,7 +35,7 @@ export const SignIn = () => {
         try {
             await createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                createDataUSer()
+                updateUserProfile()
             })
             .catch((error) => {
                 if("uth/email-already-in-use"){
@@ -53,7 +53,7 @@ export const SignIn = () => {
     }
 
 
-    const createDataUSer = async () => {
+    const updateUserProfile = async () => {
         await updateProfile(auth.currentUser!!, {
             displayName: firstName + " " + lastName
 

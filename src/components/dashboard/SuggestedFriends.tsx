@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import AddFriendCard from './AddFriendCard'
 import { query, collection, getDocs, getFirestore, doc, getDoc, limit, orderBy, startAfter } from "firebase/firestore";
 import { AuthContext } from '../../contexts/AuthContext';
+import { UserContext } from '../../contexts/UserContext';
 
 
 type suggestedUserType =  {
@@ -20,35 +21,38 @@ type suggestedUserType =  {
 
 
 export default function SuggestedFriends() {
-  
-    const[suggestedFriends, setSuggestedFriends] = useState<Array<Object>>([])
+    
     const db = getFirestore()
     const authUser = useContext(AuthContext)
+    const user = useContext(UserContext)
 
+    const[suggestedFriends, setSuggestedFriends] = useState<Array<Object>>([])
+    
     const getSuggestedFriends = async() => {
         
-        let notSuggested: Array<String> = [authUser?.uid!]
+        let notSuggested: Set<String> = new Set()
         let suggested : Array<Object> = []
         let isFirstFetch = true
         let lastVisible = null
         let queryFetch = null
         let querySnapshots = null
 
-        // ===== Fetch not suggested friends =====
-        const docSnap = authUser?.uid ? await getDoc(doc(db, "notSuggestedFriends", authUser?.uid)) : undefined;
-        if (docSnap?.exists()) {
-            const [result] = docSnap.data().idList
-            notSuggested.push(result)
+        // ===== Fetch notSuggested friends =====
+        const notSuggestedFriendsRef = doc(db, "notSuggestedFriends", authUser?.uid!);
+        const notSuggestedFriendsSnap = await getDoc(notSuggestedFriendsRef);
+        if (notSuggestedFriendsSnap.exists()) {
+            const [idList] = notSuggestedFriendsSnap.data().idList 
+            notSuggested.add(idList)
         }
-
-
+        
         // ===== Fetch suggested friends =====
         // First fetch
         try {
+            
             queryFetch = query(collection(db, "users"), orderBy("createAt"), limit(10))
             querySnapshots = await getDocs(queryFetch)
             querySnapshots.forEach((doc) => {
-                (!notSuggested.includes(doc.data().userId)) && suggested.push(doc.data())
+                (!notSuggested.has(doc.id)) && suggested.push(doc.data());
             });
 
             //Ensure that collection have minimum users
@@ -67,7 +71,7 @@ export default function SuggestedFriends() {
                     querySnapshots = await getDocs(queryFetch)
                     querySnapshots.forEach((doc) => {
                         if(suggested.length < 10){
-                            (!notSuggested.includes(doc.data().userId)) && suggested.push(doc.data())
+                            (!notSuggested.has(doc.id)) && suggested.push(doc.data())
                         } 
                     });
 
@@ -83,9 +87,8 @@ export default function SuggestedFriends() {
 
     }
 
-
     useEffect( () => {
-        authUser?.uid && getSuggestedFriends()
+        getSuggestedFriends() 
     }, [])
 
 

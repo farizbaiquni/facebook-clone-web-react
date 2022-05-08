@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { AuthContext } from './contexts/AuthContext';
 import { UserContext } from './contexts/UserContext';
@@ -9,15 +9,16 @@ import { SignIn } from './pages/SignIn';
 
 function App() {
 
-  const auth = useAuthListener()
-  const user = useUserListener()
+  let auth = useAuthListener()
+  let user = useUserListener()
 
   return (
     <AuthContext.Provider value={auth}>
       <UserContext.Provider value={user}>
         <div className="App">
-            {/* <SignIn/> */}
-            <Dashboard />
+          {
+            (auth != null && user != null) && <Dashboard />
+          }
         </div>
       </UserContext.Provider>
     </AuthContext.Provider>

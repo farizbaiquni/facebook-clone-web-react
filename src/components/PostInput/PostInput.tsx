@@ -1,12 +1,13 @@
-import { collection, doc, DocumentData, getDoc, getDocs, getFirestore, query, QueryDocumentSnapshot, Timestamp, where, writeBatch } from 'firebase/firestore';
-import React, { createRef, RefObject, useContext, useState } from 'react'
+import { addDoc, collection, doc, DocumentData, getDocs, getFirestore, query, QueryDocumentSnapshot, setDoc, Timestamp, where } from 'firebase/firestore'
+import React, { createRef, memo, RefObject, useContext, useState } from 'react'
 import Modal from 'react-modal';
-import { AuthContext } from '../../contexts/AuthContext';
+import { AuthContext } from '../../contexts/AuthContext'
 import * as modalPostInputConstants from '../../constants/ModalPostInput'
-import ModalAccessExceptFriends from './ModalAccessExceptFriends';
-import ModalAccessSpecificFriends from './ModalAccessSpecificFriends';
-import { UserContext } from '../../contexts/UserContext';
-import ModalAccessOption from './ModalAccessOption';
+import ModalAccessExceptFriends from './ModalAccessExceptFriends'
+import ModalAccessSpecificFriends from './ModalAccessSpecificFriends'
+import { UserContext } from '../../contexts/UserContext'
+import ModalAccessOption from './ModalAccessOption'
+import { postType } from '../../constants/ModalPostInput'
 
 
 type userProfileType = {
@@ -15,7 +16,7 @@ type userProfileType = {
     name: string
 }
 
-export default function PostInput() {
+function PostInput() {
 
     const customStyles = {
         overlay: {
@@ -56,62 +57,75 @@ export default function PostInput() {
 
     const [textInput, setTextInput] = useState('')
     const [accessType, setAccessType] = useState(accessTypeOption.friends)
-    const [accessAllowed, setAccessAllowed] = useState<Array<String>>([])
-    const [contentType, setContentType] = useState('text-only')
+    const [accessAllowed, setAccessAllowed] = useState<Array<String>>(user?.friends!!)
+    const [contentType, setContentType] = useState(postType.textOnly)
     const [content, setContent] = useState<Object | null>(null)
     const [feeling, setFeeling] = useState(null)
     const [location, setLocation] = useState(null)
     const [tag, setTag] = useState<Array<Object> | null>(null)
 
 
-    console.log("USER ALLOWED: " + accessAllowed + ", ISINYA: " + accessAllowed.length)
+    //console.log("USER ALLOWED: " + accessAllowed + ", ISINYA: " + accessAllowed.length)
     //console.log("FRIENDS PROFILE:" + user?.friends.slice(0, user.friends.length!!) )
 
 
-    const handlePost = async() => {
+    const handlePost = async () => {
 
-        const authUserRef = doc(db, "users", authUser?.uid!);
-        const docUserSnap = await getDoc(authUserRef);
-        
-        if(docUserSnap.exists()){
+        try {
+            //Debugging purpose -> it will be deleted later
+            let debugAccessAllowed = accessAllowed
+            debugAccessAllowed.push(authUser?.uid!!)
 
-            const batch = writeBatch(db) 
-
-            // Add data to posts collection
-            const postRef = doc(db, 'posts')
-            batch.set(postRef, {
-                idUser: authUser?.uid!,
-                text: (textInput.length > 0) ? textInput : null,
-                createAt: Timestamp.now(),
-                accessType,
-                feeling: feeling ? feeling : null,
-                location: location ? location : null,
-                tag: tag ? tag : null,
-                share: {
-                    total: 0,
-                    reiceverList: []
-                },
-                like    : { total: 0, idUser: [] },
-                love    : { total: 0, idUser: [] },
-                care    : { total: 0, idUser: [] },
-                haha    : { total: 0, idUser: [] },
-                wow     : { total: 0, idUser: [] },
-                sad     : { total: 0, idUser: [] },
-                angry   : { total: 0, idUser: [] },
-                displayed_comment : null
-            })
-        
+            let createdDate = Timestamp.now()
+            
             // Add data to search posts collection
-            const searchPostsRef = doc(db, 'searchPosts', postRef.id)
-            batch.set(searchPostsRef, {
-                idPost: postRef.id,
+            const docRef = await addDoc(collection(db, "searchPosts"), {
                 accessType,
-                accessAllowed: accessAllowed
-            })
+                accessAllowed: debugAccessAllowed,
+                createdAt: createdDate,
+            }); 
 
-        }else{
-            alert("Something went wrong")
-        }        
+            const dataPost = {
+                idPost  : docRef.id,
+                idUser : authUser!!.uid,
+                username : authUser?.displayName,
+                textPost : (textInput.length > 0) ? textInput : null,
+                feeling  : feeling ? feeling : null,
+                location : location ? location : null,
+                tagTotal : 0,
+                tagNames : [],
+                createdAt : createdDate,
+                contentType: contentType,
+                contentAttachment   : null,
+                accessType : accessType,
+                shareTotal : 0,
+                shareNames : [],
+                reactTotalLike : 0,
+                reactTotalLove : 0,
+                reactTotalCare : 0,
+                reactTotalHaha : 0,
+                reactTotalWow : 0,
+                reactTotalSad : 0,
+                reactTotalAngry : 0,
+                reactNamesLike : [],
+                reactNamesLove : [],
+                reactNamesCare : [],
+                reactNamesHaha : [],
+                reactNamesWow : [],
+                reactNamesSad : [],
+                reactNamesAngry : [],
+                defaultDisplayedComment : null,
+            }
+    
+            // Add data to posts collection
+            await setDoc(doc(db, "posts", docRef.id), dataPost);
+            setTextInput('')     
+            
+        } catch (error) {
+            alert(error)
+            setTextInput('')
+        }
+               
     }
 
     const firstFetchFriends = async() => {
@@ -300,7 +314,7 @@ export default function PostInput() {
                                             </span>
                                         </div>
 
-                                        <button type='button' disabled={ textInput.length < 0 && true} className={` mt-5 rounded-md py-2 font-semibold ${textInput.length <= 0 ? 'bg-slate-200 text-gray-500' : ' bg-blue-600 text-white'}`}>Post</button>
+                                        <button type='button' disabled={ textInput.length < 0 && true} className={` mt-5 rounded-md py-2 font-semibold ${textInput.length <= 0 ? 'bg-slate-200 text-gray-500' : ' bg-blue-600 text-white'}`} onClick={ () => { handlePost(); closeModal(); } }>Post</button>
                                     </div>
                                 )
                                 
@@ -358,3 +372,5 @@ export default function PostInput() {
     ) // End Return
 }
 
+
+export default memo(PostInput)

@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { memo, useState } from 'react'
 import Story from './Story'
 
-export default function Stories() {
+function Stories() {
 
   const[stories, setStories] = useState([1, 2, 3, 4])
 
@@ -34,3 +34,5 @@ const LastStory = () => (
     </svg>
   </div>
 )
+
+export default memo(Stories)
