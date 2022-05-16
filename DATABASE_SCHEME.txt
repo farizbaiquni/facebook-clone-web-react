@@ -81,8 +81,11 @@ defaultDisplayedComment     : Object <
 COMMENTS -> collection di luar post,
 
 
+USER_REACT_POSTS_ALL
+id_posts        [id_post: string]              : Array<string>
 
-USER_REACT_POSTS  (Berhubungan dengan collection posts) -> ID-nya = id_user -> berbasis user
+
+USER_REACT_POSTS  (Berhubungan dengan collection USER_REACT_POSTS_ALL)
 like    [id_post]
 love    [id_post]
 care    [id_post]

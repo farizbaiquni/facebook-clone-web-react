@@ -1,22 +1,49 @@
-import { collection, DocumentData, getDocs, getFirestore, limit, orderBy, query, QueryDocumentSnapshot, where } from 'firebase/firestore';
+import { collection, DocumentData, getDocs, getFirestore, limit, orderBy, query, QueryDocumentSnapshot, where, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import React, { useContext, useEffect, useState } from 'react'
 import { AuthContext } from '../../contexts/AuthContext';
-import { postType } from '../../constants/EntityType';
+import { postType, reactTypeOption } from '../../constants/EntityType';
 import PostCard from './PostCard';
-import { useReactsListener } from '../../hooks/use_reacts_listener';
+import { useReactsListener } from '../../hooks/use-reacts-listener';
 
 export default function Post() {
 
   const db = getFirestore()
   const auth = useContext(AuthContext)
-  const reactPosts: Array<Array<string>> | null | undefined = useReactsListener(auth!!.uid!!)
+  const [statusListeningPosts, setStatusListeningPosts] = useState<Boolean | null | undefined>(null)
   const [posts, setPosts] = useState<Array<postType>>([])
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null | undefined>(null)
-  const [isFirstQueryDone, setIsFirstQueryDone] = useState(false)
+  let isFirstQueryPostDone = false
+
+
+  const [reactLike, setReactLike] = useState<Set<string> | null>(null)
+  const [reactLove, setReactLove] = useState<Set<string> | null>(null)
+  const [reactCare, setReactCare] = useState<Set<string> | null>(null)
+  const [reactHaha, setReactHaha] = useState<Set<string> | null>(null)
+  const [reactWow, setReactWow] = useState<Set<string> | null>(null)
+  const [reactSad, setReactSad] = useState<Set<string> | null>(null)
+  const [reactAngry, setReactAngry] = useState<Set<string> | null>(null)
+  const [reactStatus, setReactStatus] = useState<string | null>(null)
+
+  console.log("====== CALLED POST ======")
+  // console.log(reactLike)
+
+  const docRef = doc(db, "userReactPosts", auth!!.uid!!);
+
+  const checkReactPostStatus = (idPost: string) => {
+    console.log("ALERTTTTTTTTTTTT")
+    if(reactLike!!.has(idPost)){
+      return reactTypeOption.like
+    } else if(reactLove!!.has(idPost)){
+      return reactTypeOption.love
+    } else {
+      return null
+    }
+  }
 
 
   const firstQueryPosts = async() => {
     try {
+        console.log("CALLED QUERY FIRST POSTS")
         let idPostsArr: Array<string> = []
 
         // Query the first page of docs
@@ -41,8 +68,11 @@ export default function Post() {
       const queryPosts = query(collection(db, "posts"), where('idPost', 'in', idPostsArr), orderBy("createdAt", "desc"));
       const documentSnapshots = await getDocs(queryPosts);
 
+      console.log("CALLED QUERY POSTS")
+      
+      const tempPosts = new Set(posts)
+
       documentSnapshots.forEach( post => {
-        console.log(post.data().createdAt)
         let tempDefaultDisplayedComment = {
           "commentId" : post.data().commentId,
           "commentIdUser" : post.data().commentIdUser,
@@ -90,10 +120,11 @@ export default function Post() {
           "reactNamesAngry"     :  post.data().reactNamesAngry,
            tempDefaultDisplayedComment
         } 
-
-        setPosts(prevPosts => [...prevPosts, tempPost])
-
+        tempPosts.add(tempPost)
       })
+
+      setPosts(Array.from(tempPosts))
+      isFirstQueryPostDone = true
       
     } catch (error) {
       console.log(error)
@@ -101,24 +132,65 @@ export default function Post() {
   }
 
   useEffect( () => {
-    firstQueryPosts()
+
+    const listenerReactPosts = onSnapshot(docRef, (doc) => {
+      if(doc.exists()){
+          try {
+            console.log("CALLLED QUERY REACT");
+            
+            if(isFirstQueryPostDone === false){
+              (doc.data().like === undefined || doc.data().like === null) ? setReactLike(new Set()) : setReactLike(new Set(doc.data().like));
+              (doc.data().love === undefined || doc.data().love === null) ? setReactLove(new Set()) : setReactLove(new Set(doc.data().love));
+              (doc.data().care === undefined || doc.data().care === null) ? setReactCare(new Set()) : setReactCare(new Set(doc.data().care));
+              (doc.data().haha === undefined || doc.data().haha === null) ? setReactHaha(new Set()) : setReactHaha(new Set(doc.data().haha));
+              (doc.data().wow === undefined || doc.data().wow === null) ? setReactWow(new Set()) : setReactWow(new Set(doc.data().wow));
+              (doc.data().sad === undefined || doc.data().sad === null) ? setReactSad(new Set()) : setReactSad(new Set(doc.data().sad));
+              (doc.data().angry === undefined || doc.data().angry === null) ? setReactAngry(new Set()) : setReactAngry(new Set(doc.data().angry));
+            } else {
+              if(reactLike !== new Set(doc.data().like)){
+                (doc.data().like === undefined || doc.data().like === null) ? setReactLike(new Set()) : setReactLike(new Set(doc.data().like));
+              }
+            }
+
+            setStatusListeningPosts(true);
+            if(isFirstQueryPostDone === false){
+              firstQueryPosts();
+            } 
+
+          } catch (error) {
+              console.log("Error occured = " + error)
+              setStatusListeningPosts(null)
+          }      
+
+      } else {
+          console.log("Data Not Exist")
+          setStatusListeningPosts(undefined);
+          if(isFirstQueryPostDone === false){
+            firstQueryPosts();
+          }
+      }
+    });
+
+    return () => listenerReactPosts()
+
   }, [auth])
 
   
   return (
     <div>
       {
-        (reactPosts !== null && auth !== null) && (
-          (reactPosts === undefined) ? (
-            posts.map(post => (
-              <PostCard key={post.idPost} post={post} reactPosts={reactPosts} userId={auth!!.uid!!} />
-            ))
+        // Check make sure data from reactPosts fetched / no error
+        (statusListeningPosts !== null) && (
+          (statusListeningPosts === undefined) ? (
+            posts.map(post => {
+              return <PostCard key={post.idPost} post={post} userId={auth!!.uid!!} reactStatus={null} statusListeningPosts={statusListeningPosts}/>
+            } 
+            )
           ) : (
-            (reactPosts!!.length >= 7) ? (
-              posts.map(post => (
-                <PostCard key={post.idPost} post={post} reactPosts={reactPosts} userId={auth!!.uid!!} />
-              ))
-            ) : { }
+            posts.map(post => {
+              const reactStatus = checkReactPostStatus(post.idPost);
+              return <PostCard key={post.idPost} post={post} userId={auth!!.uid!!} reactStatus={reactStatus} statusListeningPosts={statusListeningPosts}/>
+            })
           )
         )
       }
