@@ -5,6 +5,17 @@ import { postType, reactTypeOption } from '../../constants/EntityType';
 import PostCard from './PostCard';
 import { useReactsListener } from '../../hooks/use-reacts-listener';
 
+
+type reactPostsType = {
+  like: Set<string>,
+  love: Set<string>,
+  care: Set<string>,
+  haha: Set<string>,
+  wow: Set<string>,
+  sad: Set<string>,
+  angry: Set<string>,
+}
+
 export default function Post() {
 
   const db = getFirestore()
@@ -12,32 +23,44 @@ export default function Post() {
   const [statusListeningPosts, setStatusListeningPosts] = useState<Boolean | null | undefined>(null)
   const [posts, setPosts] = useState<Array<postType>>([])
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null | undefined>(null)
-  let isFirstQueryPostDone = false
 
+  const [isFirstQueryPostDone, setIsFirstQueryPostDone] = useState<boolean>(false)
 
-  const [reactLike, setReactLike] = useState<Set<string> | null>(null)
-  const [reactLove, setReactLove] = useState<Set<string> | null>(null)
-  const [reactCare, setReactCare] = useState<Set<string> | null>(null)
-  const [reactHaha, setReactHaha] = useState<Set<string> | null>(null)
-  const [reactWow, setReactWow] = useState<Set<string> | null>(null)
-  const [reactSad, setReactSad] = useState<Set<string> | null>(null)
-  const [reactAngry, setReactAngry] = useState<Set<string> | null>(null)
-  const [reactStatus, setReactStatus] = useState<string | null>(null)
+  // const [reactLike, setReactLike] = useState<Set<string> | null>(null)
+  // const [reactLove, setReactLove] = useState<Set<string> | null>(null)
+  // const [reactCare, setReactCare] = useState<Set<string> | null>(null)
+  // const [reactHaha, setReactHaha] = useState<Set<string> | null>(null)
+  // const [reactWow, setReactWow] = useState<Set<string> | null>(null)
+  // const [reactSad, setReactSad] = useState<Set<string> | null>(null)
+  // const [reactAngry, setReactAngry] = useState<Set<string> | null>(null)
 
-  console.log("====== CALLED POST ======")
+  const [reactPosts, setReactPosts] = useState<reactPostsType | null>(null)
+
+  console.log("====== RE-RENDER POST ======")
   // console.log(reactLike)
 
   const docRef = doc(db, "userReactPosts", auth!!.uid!!);
 
   const checkReactPostStatus = (idPost: string) => {
-    console.log("ALERTTTTTTTTTTTT")
-    if(reactLike!!.has(idPost)){
-      return reactTypeOption.like
-    } else if(reactLove!!.has(idPost)){
-      return reactTypeOption.love
-    } else {
-      return null
-    }
+    console.log("====== CALCULATING ======")
+
+    if(reactPosts !== null || reactPosts !== undefined){
+      for(let reactType in reactPosts){
+        switch(reactType){
+          case reactTypeOption.like:
+            if(reactPosts[reactType as keyof reactPostsType].has(idPost)){
+              return reactTypeOption.like
+            } else {
+              return null
+            }
+          default:
+            return null
+        }
+      }
+    } 
+
+    return null
+
   }
 
 
@@ -124,7 +147,8 @@ export default function Post() {
       })
 
       setPosts(Array.from(tempPosts))
-      isFirstQueryPostDone = true
+      setIsFirstQueryPostDone(true);
+     
       
     } catch (error) {
       console.log(error)
@@ -132,27 +156,34 @@ export default function Post() {
   }
 
   useEffect( () => {
-
     const listenerReactPosts = onSnapshot(docRef, (doc) => {
       if(doc.exists()){
           try {
             console.log("CALLLED QUERY REACT");
             
-            if(isFirstQueryPostDone === false){
-              (doc.data().like === undefined || doc.data().like === null) ? setReactLike(new Set()) : setReactLike(new Set(doc.data().like));
-              (doc.data().love === undefined || doc.data().love === null) ? setReactLove(new Set()) : setReactLove(new Set(doc.data().love));
-              (doc.data().care === undefined || doc.data().care === null) ? setReactCare(new Set()) : setReactCare(new Set(doc.data().care));
-              (doc.data().haha === undefined || doc.data().haha === null) ? setReactHaha(new Set()) : setReactHaha(new Set(doc.data().haha));
-              (doc.data().wow === undefined || doc.data().wow === null) ? setReactWow(new Set()) : setReactWow(new Set(doc.data().wow));
-              (doc.data().sad === undefined || doc.data().sad === null) ? setReactSad(new Set()) : setReactSad(new Set(doc.data().sad));
-              (doc.data().angry === undefined || doc.data().angry === null) ? setReactAngry(new Set()) : setReactAngry(new Set(doc.data().angry));
-            } else {
-              if(reactLike !== new Set(doc.data().like)){
-                (doc.data().like === undefined || doc.data().like === null) ? setReactLike(new Set()) : setReactLike(new Set(doc.data().like));
-              }
+            // (doc.data().like === undefined || doc.data().like === null) ? setReactLike(new Set()) : setReactLike(new Set(doc.data().like));
+            // (doc.data().love === undefined || doc.data().love === null) ? setReactLove(new Set()) : setReactLove(new Set(doc.data().love));
+            // (doc.data().care === undefined || doc.data().care === null) ? setReactCare(new Set()) : setReactCare(new Set(doc.data().care));
+            // (doc.data().haha === undefined || doc.data().haha === null) ? setReactHaha(new Set()) : setReactHaha(new Set(doc.data().haha));
+            // (doc.data().wow === undefined || doc.data().wow === null) ? setReactWow(new Set()) : setReactWow(new Set(doc.data().wow));
+            // (doc.data().sad === undefined || doc.data().sad === null) ? setReactSad(new Set()) : setReactSad(new Set(doc.data().sad));
+            // (doc.data().angry === undefined || doc.data().angry === null) ? setReactAngry(new Set()) : setReactAngry(new Set(doc.data().angry));
+
+            let tempReactPosts: reactPostsType = {
+              like: (doc.data().like === undefined || doc.data().like === null) ? new Set() : new Set(doc.data().like),
+              love: (doc.data().love === undefined || doc.data().love === null) ? new Set() : new Set(doc.data().love),
+              care: (doc.data().care === undefined || doc.data().care === null) ? new Set() : new Set(doc.data().care),
+              haha: (doc.data().haha === undefined || doc.data().haha === null) ? new Set() : new Set(doc.data().haha),
+              wow: (doc.data().wow === undefined || doc.data().wow === null) ? new Set() : new Set(doc.data().wow),
+              sad: (doc.data().sad === undefined || doc.data().sad === null) ? new Set() : new Set(doc.data().sad),
+              angry: (doc.data().angry === undefined || doc.data().angry === null) ? new Set() : new Set(doc.data().angry),
             }
 
-            setStatusListeningPosts(true);
+            !isFirstQueryPostDone && setStatusListeningPosts(true); 
+            
+            setReactPosts(tempReactPosts)
+
+            
             if(isFirstQueryPostDone === false){
               firstQueryPosts();
             } 
@@ -173,7 +204,7 @@ export default function Post() {
 
     return () => listenerReactPosts()
 
-  }, [auth])
+  }, [auth, isFirstQueryPostDone])
 
   
   return (
