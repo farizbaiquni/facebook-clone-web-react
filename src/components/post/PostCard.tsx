@@ -71,7 +71,7 @@ function PostCard(props: propsType) {
   }, [])
 
   return (
-    <div className="post ml-3 mb-16">
+    <div className="post mb-10 bg-white w-600 p-5 rounded-md shadow-slate-400 shadow-sm border-0 border-gray-400">
       <HeaderPost headerPost={headerPost}/>
       <TextStatusPost textStatusPost={props.post.textPost} />
       {

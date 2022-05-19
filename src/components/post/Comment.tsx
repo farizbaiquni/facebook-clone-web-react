@@ -5,9 +5,11 @@ export default function Comment() {
     <div className=' flex mt-3'>
         <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="" className=' h-8 w-8 rounded-full mr-2' />
         <span className=' flex flex-col ml-2'>
-            <p className=' text-sm font-semibold text-left'>Anonymous</p>
-            <p className=' text-left'>This is a comment</p>
-            <span className=' flex mt-1'>
+            <span className=' flex flex-col bg-gray-100 px-5 py-2 rounded-lg'>
+              <p className=' text-sm font-semibold text-left'>Anonymous</p>
+              <p className=' text-left'>This is a comment</p>
+            </span>
+            <span className=' flex mt-1 pl-5'>
                 <p className=' text-xs font-bold text-gray-500 cursor-pointer hover:underline mr-4'>Like</p>
                 <p className=' text-xs font-bold text-gray-500 cursor-pointer hover:underline mr-4'>Reply</p>
                 <p className=' text-xs font-bold text-gray-500 cursor-pointer hover:underline'>See translation</p>

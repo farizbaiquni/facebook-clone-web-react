@@ -15,9 +15,11 @@ module.exports = {
         '19rem': '19rem'
       },
       width: {
+        '700px': '700px',
         '600': '600px',
         'post': '550px',
         '400': '400px',
+        '330px': '330px',
         '300': '300px',
       },
       screens: {

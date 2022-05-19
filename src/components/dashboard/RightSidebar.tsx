@@ -5,7 +5,7 @@ import Groups from '../rightSidebar/Groups'
 
 export default function RightSidebar() {
   return (
-    <div className='right-side flex flex-col text-left mr-3 w-300'>
+    <div className='right-side flex flex-col text-left mr-3 w-3000'>
     
       <Groups />
       <Contacts />

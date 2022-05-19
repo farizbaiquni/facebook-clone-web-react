@@ -13,11 +13,11 @@ export default function Dashboard() {
   return (
     <Fragment>
       <Navbar />
-      <div className=' flex justify-between mt-5'>
+      <div className=' flex justify-between pt-5 bg-gray-100'>
           <LeftSidebar />
-          <div className="main-content flex flex-col w-600 mx-5 mb-36">
+          <div className="main-content flex flex-col w-700px items-center mx-5 mb-36">
               <Stories />
-              <span className=' w-post m-auto'>
+              <span className=' w-post m-auto flex flex-col items-center'>
                 <PostInput />
                 {
                   (auth !== null) && <Post />
