@@ -1,6 +1,11 @@
 import React from 'react'
 
-export default function LikePost() {
+type propsType = {
+  totalReact: number,
+  reactStatus: null | string,
+}
+
+export default function ReactPost(props: propsType) {
   return (
     <div className=' flex items-center my-3'>
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="#00b4d8">
@@ -15,7 +20,12 @@ export default function LikePost() {
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
         </svg>
 
-        <p className=' text-sm text-gray-500'>200k</p>
+        <p className=''>
+          &nbsp;
+          <span className={`text-gray-500 ${props.reactStatus === null && 'hidden'}`}>You and </span>
+          <span className=' text-gray-500'>{props.totalReact}</span>
+          <span className={`text-gray-500 ${props.reactStatus === null && 'hidden'}`}> others</span>
+        </p>
 
     </div>
   )

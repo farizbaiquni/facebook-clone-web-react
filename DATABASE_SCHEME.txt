@@ -81,8 +81,10 @@ defaultDisplayedComment     : Object <
 COMMENTS -> collection di luar post,
 
 
-USER_REACT_POSTS_ALL
-id_posts        [id_post: string]              : Array<string>
+REACT_POSTS_DETAILS -> ID ---> id_post
+
+
+
 
 
 USER_REACT_POSTS  (Berhubungan dengan collection USER_REACT_POSTS_ALL)
@@ -93,7 +95,6 @@ haha    [id_post]
 wow     [id_post]
 sad     [id_post]
 angry   [id_post]
-
 
 
 SHARE_DETAIL

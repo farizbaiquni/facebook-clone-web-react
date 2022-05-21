@@ -8,7 +8,8 @@ import Comment from './Comment'
 import ContentPost from './ContentPost'
 import HeaderPost from './HeaderPost'
 import InputComment from './InputComment'
-import LikePost from './LikePost'
+import ReactPost from './ReactPost'
+import LikePost from './ReactPost'
 import TextStatusPost from './TextStatusPost'
 
 type propsType = {
@@ -21,6 +22,9 @@ type propsType = {
 function PostCard(props: propsType) {
 
   const db = getFirestore()
+  const reactDocRef = doc(db, "userReactPosts", props.userId)
+  const postDocRef = doc(db, "posts", props.post.idPost)
+  const [loadingProcessReact, setLoadingProcessReact] = useState<boolean>(false)
 
   let headerPost: headerPostType = {
     username: props.post.username,
@@ -33,38 +37,116 @@ function PostCard(props: propsType) {
 
 
   console.log("====== POST CARD RE-RENDER " + props.post.textPost + " ======")
-  // console.log("React status " + props.reactStatus)
 
   const handleRemoveLike = async () => {
     console.log("HANDLE REMOVE LIKE")
     if(props.statusListeningPosts !== undefined && props.reactStatus === reactTypeOption.like){
-      const reactRef = doc(db, "userReactPosts", props.userId);
-      // Atomically add a new region to the "regions" array field.
-      await updateDoc(reactRef, {
-          like: arrayRemove(props.post.idPost)
-      });
+      // const reactRef = doc(db, "userReactPosts", props.userId);
+      // await updateDoc(reactRef, {
+      //     like: arrayRemove(props.post.idPost)
+      // });  
+      try {
+        setLoadingProcessReact(true)
+        await runTransaction(db, async (transaction) => {
+          const sfDoc = await transaction.get(postDocRef);
+          if (sfDoc.exists()) {
+            const tempTotalLike = sfDoc.data().reactTotalLike - 1
+            transaction.update(postDocRef, {
+              reactTotalLike: tempTotalLike,
+            })
+            transaction.update(reactDocRef, {
+              like: arrayRemove(props.post.idPost)
+            })
+          } 
+        });
+        setLoadingProcessReact(false)
+      } catch (error) { setLoadingProcessReact(false) }
+      
     } 
   }
 
   const handleAddLike = async () => {
     console.log("HANDLE ADD LIKE")
-    if(props.statusListeningPosts === undefined){
-      await setDoc(doc(db, "userReactPosts", props.userId), {
-        like: [props.post.idPost],
-        love: [],
-        care: [],
-        haha: [],
-        wow: [],
-        sad: [],
-        angry: [],
-      });
-    } else {
-      const reactRef = doc(db, "userReactPosts", props.userId);
-      // Atomically add a new region to the "regions" array field.
-      await updateDoc(reactRef, {
-          like: arrayUnion(props.post.idPost)
-      });
-    }
+    if (props.statusListeningPosts !== null){
+      if(props.statusListeningPosts === undefined){
+        // await setDoc(doc(db, "userReactPosts", props.userId), {
+        //   like: [props.post.idPost],
+        //   love: [],
+        //   care: [],
+        //   haha: [],
+        //   wow: [],
+        //   sad: [],
+        //   angry: [],
+        // });
+        
+        // ================= COLLECTION USER REACT NOT CREATE YET =================
+        try {
+          setLoadingProcessReact(true)
+          await runTransaction(db, async (transaction) => {
+            const sfDoc = await transaction.get(postDocRef);
+            if (sfDoc.exists()) {
+              const tempTotalLike = sfDoc.data().reactTotalLike + 1
+              if (tempTotalLike < 20){
+                transaction.set(reactDocRef, {
+                  like: [props.post.idPost],
+                  love: [],
+                  care: [],
+                  haha: [],
+                  wow: [],
+                  sad: [],
+                  angry: [],
+                })
+                transaction.update(postDocRef, {
+                  reactTotalLike: tempTotalLike,
+                })
+              } else {
+                transaction.set(reactDocRef, {
+                  like: [props.post.idPost],
+                  love: [],
+                  care: [],
+                  haha: [],
+                  wow: [],
+                  sad: [],
+                  angry: [],
+                })
+              }
+            } 
+            setLoadingProcessReact(false)
+          });
+        } catch (error) { setLoadingProcessReact(false) }
+
+      } else {
+        // ================= COLLECTION USER REACT HAVE BEEN CREATED =================
+        // const reactRef = doc(db, "userReactPosts", props.userId);
+        // await updateDoc(reactRef, {
+        //     like: arrayUnion(props.post.idPost)
+        // });
+
+        try {
+          setLoadingProcessReact(true)
+          await runTransaction(db, async (transaction) => {
+            const sfDoc = await transaction.get(postDocRef);
+            if (sfDoc.exists()) {
+              const tempTotalLike = sfDoc.data().reactTotalLike + 1
+              if (tempTotalLike < 20){
+                transaction.update(reactDocRef, {
+                  like: arrayUnion(props.post.idPost)
+                })
+                transaction.update(postDocRef, {
+                  reactTotalLike: tempTotalLike,
+                })
+              } else {
+                transaction.update(reactDocRef, {
+                  like: arrayUnion(props.post.idPost)
+                })
+              }
+            } 
+          });
+          setLoadingProcessReact(false)
+        } catch (error) { setLoadingProcessReact(false) }
+      }
+    } 
+    
   }
 
   useEffect(() => {
@@ -85,11 +167,11 @@ function PostCard(props: propsType) {
       
       {
         ( totalReact > 0 ) ? (
-          <LikePost />
+          <ReactPost totalReact={totalReact} reactStatus={props.reactStatus} />
         ) : <br />
       }
 
-      <ButtonAction userId={props.userId} handleAddLike={handleAddLike} reactStatus={props.reactStatus} handleRemoveLike={handleRemoveLike}/>
+      <ButtonAction userId={props.userId} handleAddLike={handleAddLike} reactStatus={props.reactStatus} handleRemoveLike={handleRemoveLike} loadingProcessReact={loadingProcessReact}/>
       
       <Comment />
       <InputComment />
