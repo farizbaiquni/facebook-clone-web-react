@@ -164,8 +164,6 @@ export default function Post() {
             } 
 
             !isFirstQueryPostDone && setStatusListeningPosts(true); 
-
-            console.log(tempReactPosts)
             
             setReactPosts(tempReactPosts)
 

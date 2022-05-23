@@ -19,6 +19,7 @@ type propsType = {
   statusListeningPosts: Boolean | undefined,
 }
 
+
 function PostCard(props: propsType) {
 
   const db = getFirestore()
@@ -166,12 +167,28 @@ function PostCard(props: propsType) {
       }
       
       {
-        ( totalReact > 0 ) ? (
-          <ReactPost totalReact={totalReact} reactStatus={props.reactStatus} />
+        ( totalReact > 0 || props.reactStatus !== null ) ? (
+          <ReactPost 
+            totalReact={totalReact} 
+            reactStatus={props.reactStatus} 
+            reactTotalLike={props.post.reactTotalLike} 
+            reactTotalLove={props.post.reactTotalLove}
+            reactTotalCare={props.post.reactTotalCare}
+            reactTotalHaha={props.post.reactTotalHaha}
+            reactTotalWow={props.post.reactTotalWow}
+            reactTotalSad={props.post.reactTotalSad}
+            reactTotalAngry={props.post.reactTotalAngry}
+          />
         ) : <br />
       }
 
-      <ButtonAction userId={props.userId} handleAddLike={handleAddLike} reactStatus={props.reactStatus} handleRemoveLike={handleRemoveLike} loadingProcessReact={loadingProcessReact}/>
+      <ButtonAction 
+        userId={props.userId} 
+        handleAddLike={handleAddLike} 
+        reactStatus={props.reactStatus} 
+        handleRemoveLike={handleRemoveLike} 
+        loadingProcessReact={loadingProcessReact}
+      />
       
       <Comment />
       <InputComment />
