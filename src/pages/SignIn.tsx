@@ -31,11 +31,10 @@ export const SignIn = () => {
 
     const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
-
         try {
             await createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                updateUserProfile()
+                //updateUserProfile()
             })
             .catch((error) => {
                 if("uth/email-already-in-use"){
@@ -46,7 +45,6 @@ export const SignIn = () => {
                     alert(errorMessage + "Error Code : " + errorCode )
                 }
             })
-
         } catch (error) {
             alert(error)
         }
@@ -84,7 +82,7 @@ export const SignIn = () => {
         })
 
         await batch.commit()
-}
+    }
 
     const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()

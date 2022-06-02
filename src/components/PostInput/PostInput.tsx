@@ -17,7 +17,6 @@ type userProfileType = {
 }
 
 function PostInput() {
-
     const customStyles = {
         overlay: {
             backgroundColor: 'rgb(255, 255, 255, 0.8)',
@@ -65,12 +64,7 @@ function PostInput() {
     const [tag, setTag] = useState<Array<Object> | null>(null)
 
 
-    //console.log("USER ALLOWED: " + accessAllowed + ", ISINYA: " + accessAllowed.length)
-    //console.log("FRIENDS PROFILE:" + user?.friends.slice(0, user.friends.length!!) )
-
-
     const handlePost = async () => {
-
         try {
             //Debugging purpose -> it will be deleted later
             let debugAccessAllowed = accessAllowed
@@ -86,20 +80,18 @@ function PostInput() {
             }); 
 
             const dataPost = {
-                idPost  : docRef.id,
+                idPost : docRef.id,
                 idUser : authUser!!.uid,
-                username : authUser?.displayName,
                 textPost : (textInput.length > 0) ? textInput : null,
-                feeling  : feeling ? feeling : null,
+                feeling : feeling ? feeling : null,
                 location : location ? location : null,
                 tagTotal : 0,
-                tagNames : [],
-                createdAt : createdDate,
-                contentType: contentType,
-                contentAttachment   : null,
-                accessType : accessType,
                 shareTotal : 0,
-                shareNames : [],
+                commentTotal : 0,
+                createdAt : createdDate,
+                contentType : contentType,
+                contentAttachment : null,
+                accessType : accessType,
                 reactTotalLike : 0,
                 reactTotalLove : 0,
                 reactTotalCare : 0,
@@ -107,16 +99,8 @@ function PostInput() {
                 reactTotalWow : 0,
                 reactTotalSad : 0,
                 reactTotalAngry : 0,
-                reactNamesLike : [],
-                reactNamesLove : [],
-                reactNamesCare : [],
-                reactNamesHaha : [],
-                reactNamesWow : [],
-                reactNamesSad : [],
-                reactNamesAngry : [],
-                defaultDisplayedComment : null,
             }
-    
+
             // Add data to posts collection
             await setDoc(doc(db, "posts", docRef.id), dataPost);
             setTextInput('')     

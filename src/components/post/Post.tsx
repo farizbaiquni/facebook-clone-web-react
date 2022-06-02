@@ -17,25 +17,21 @@ type reactPostsType = {
 }
 
 export default function Post() {
+  console.log("====== RE-RENDER POST ======")
 
   const db = getFirestore()
   const auth = useContext(AuthContext)
   const [statusListeningPosts, setStatusListeningPosts] = useState<Boolean | null | undefined>(null)
   const [posts, setPosts] = useState<Array<postType>>([])
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null | undefined>(null)
-
   const [isFirstQueryPostDone, setIsFirstQueryPostDone] = useState<boolean>(false)
-
   const [reactPosts, setReactPosts] = useState<reactPostsType | null>(null)
-
-  console.log("====== RE-RENDER POST ======")
-  // console.log(reactLike)
-
   const docRef = doc(db, "userReactPosts", auth!!.uid!!);
 
-  const checkReactPostStatus = (idPost: string) => {
-    console.log("====== CALCULATING ======")
 
+
+  const checkReactPostStatus = (idPost: string) => {
+    console.log("CALCULATING.......")
     if(reactPosts !== null || reactPosts !== undefined){
       for(let reactType in reactPosts){
         switch(reactType){
@@ -50,27 +46,22 @@ export default function Post() {
         }
       }
     } 
-
     return null
-
   }
 
 
+
+  // FIRST QUERY POSTS
   const firstQueryPosts = async() => {
     try {
         console.log("CALLED QUERY FIRST POSTS")
         let idPostsArr: Array<string> = []
-
-        // Query the first page of docs
         const first = query(collection(db, "searchPosts"), where('accessAllowed', 'array-contains-any', ['XWbtx7l5njceLoy5XHrS7ESwTRU2']), orderBy('createdAt', 'desc'), limit(5));
         const documentSnapshots = await getDocs(first);
         documentSnapshots.forEach( post => {
           idPostsArr.push(post.id)
         })
-
         getDataPosts(idPostsArr)
-        
-        // Set the last visible document
         setLastVisible(documentSnapshots.docs[documentSnapshots.docs.length-1])
     } catch (error) {
         console.log(error)
@@ -78,47 +69,28 @@ export default function Post() {
   }
 
 
+
+  //GET POSTS DATA
   const getDataPosts = async(idPostsArr: Array<string>) => {
+    console.log("CALLED QUERY POSTS")
     try {
       const queryPosts = query(collection(db, "posts"), where('idPost', 'in', idPostsArr), orderBy("createdAt", "desc"));
       const documentSnapshots = await getDocs(queryPosts);
-
-      console.log("CALLED QUERY POSTS")
-      
       const tempPosts = new Set(posts)
-
       documentSnapshots.forEach( post => {
-        let tempDefaultDisplayedComment = {
-          "commentId" : post.data().commentId,
-          "commentIdUser" : post.data().commentIdUser,
-          "commentText" : post.data().commentText,
-          "commentContentAttachment" : post.data().commentContentAttachment,
-          "commentCreatedAt" : post.data().commentCreatedAt ? post.data().commentCreatedAt as Date : null,
-          "commentReplay" : post.data().commentReplay,
-          "commentTotalLike" : post.data().commentTotalLike,
-          "commentTotalLove" : post.data().commentTotalLove,
-          "commentTotalCare" : post.data().commentTotalCare,
-          "commentTotalHaha" : post.data().commentTotalHaha,
-          "commentTotalWow" : post.data().commentTotalWow,
-          'commentTotalSad' : post.data().commentTotalSad,
-          "commentTotalAngry" : post.data().commentTotalAngry,
-        }
-
         let tempPost = {
           "idPost"              :  post.data().idPost,
           "idUser"              :  post.data().idUser,
-          "username"            :  post.data().username,
           "textPost"            :  post.data().textPost,
           "feeling"             :  post.data().feeling,
           "location"            :  post.data().location,
-          "tagTotal"            :  post.data().tagTotal,
-          "tagNames"            :  post.data().tagNames,
+          "tagTotal"            :  post.data().tagTotal ? Number( post.data().tagTotal.toString() ) : 0,
+          "shareTotal"          :  post.data().shareTotal ? Number( post.data().shareTotal.toString() ) : 0,
+          "commentTotal"        :  post.data().commentTotal ? Number( post.data().commentTotal.toString() ) : 0,
           "createdAt"           :  post.data().createdAt ? post.data().createdAt.toDate() : null,
           "contentType"         :  post.data().contentType,
           "contentAttachment"   :  post.data().contentAttachment,
           "accessType"          :  post.data().accessType,
-          "shareTotal"          :  post.data().shareTotal,
-          "shareNames"          :  post.data().shareNames,
           "reactTotalLike"      :  post.data().reactTotalLike ? Number( post.data().reactTotalLike.toString() ) : 0,
           "reactTotalLove"      :  post.data().reactTotalLove ? Number( post.data().reactTotalLove.toString() ) : 0,
           "reactTotalCare"      :  post.data().reactTotalCare ? Number( post.data().reactTotalCare.toString() ) : 0,
@@ -126,33 +98,23 @@ export default function Post() {
           "reactTotalWow"       :  post.data().reactTotalWow ? Number( post.data().reactTotalWow.toString() ) : 0,
           "reactTotalSad"       :  post.data().reactTotalSad ? Number( post.data().reactTotalSad.toString() ) : 0,
           'reactTotalAngry'     :  post.data().reactTotalAngry ? Number( post.data().reactTotalAngry.toString() ) : 0,
-          "reactNamesLike"      :  post.data().reactNamesLike,
-          "reactNamesLove"      :  post.data().reactNamesLove,
-          'reactNamesCare'      :  post.data().reactNamesCare,
-          'reactNamesHaha'      :  post.data().reactNamesHaha,
-          "reactNamesWow"       :  post.data().reactNamesWow,
-          'reactNamesSad'       :  post.data().reactNamesSad,
-          "reactNamesAngry"     :  post.data().reactNamesAngry,
-           tempDefaultDisplayedComment
         } 
         tempPosts.add(tempPost)
       })
-
       setPosts(Array.from(tempPosts))
       setIsFirstQueryPostDone(true);
-     
-      
     } catch (error) {
       console.log(error)
     }
   }
 
-  useEffect( () => {
+
+
+  useEffect ( () => {
     const listenerReactPosts = onSnapshot(docRef, (doc) => {
       if(doc.exists()){
           try {
             console.log("CALLLED QUERY REACT");
-
             let tempReactPosts: reactPostsType = {
               like: (doc.data().like === undefined || doc.data().like === null) ? new Set() : new Set(doc.data().like),
               love: (doc.data().love === undefined || doc.data().love === null) ? new Set() : new Set(doc.data().love),
@@ -162,21 +124,15 @@ export default function Post() {
               sad: (doc.data().sad === undefined || doc.data().sad === null) ? new Set() : new Set(doc.data().sad),
               angry: (doc.data().angry === undefined || doc.data().angry === null) ? new Set() : new Set(doc.data().angry),
             } 
-
             !isFirstQueryPostDone && setStatusListeningPosts(true); 
-            
             setReactPosts(tempReactPosts)
-
-            
             if(isFirstQueryPostDone === false){
               firstQueryPosts();
             } 
-
           } catch (error) {
               console.log("Error occured = " + error)
               setStatusListeningPosts(null)
           }      
-
       } else {
           console.log("Data Not Exist")
           setStatusListeningPosts(undefined);
@@ -184,7 +140,7 @@ export default function Post() {
             firstQueryPosts();
           }
       }
-    });
+    })
 
     return () => listenerReactPosts()
 

@@ -1,15 +1,16 @@
-import { arrayRemove, arrayUnion, doc, getFirestore, runTransaction, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
-import React, { memo, useEffect, useState } from 'react'
+import { arrayRemove, arrayUnion, doc, getFirestore, runTransaction } from 'firebase/firestore'
+import React, { memo, useContext, useEffect, useState } from 'react'
 import { postType, reactTypeOption } from '../../constants/EntityType'
 import { postType as postAccessType } from '../../constants/ModalPostInput'
 import { headerPostType } from '../../constants/PostComponentType'
+import { UserContext } from '../../contexts/UserContext'
+import { db } from '../../lib/firebase'
 import ButtonAction from './ButtonAction'
 import Comment from './Comment'
 import ContentPost from './ContentPost'
 import HeaderPost from './HeaderPost'
 import InputComment from './InputComment'
 import ReactPost from './ReactPost'
-import LikePost from './ReactPost'
 import TextStatusPost from './TextStatusPost'
 
 type propsType = {
@@ -21,14 +22,13 @@ type propsType = {
 
 
 function PostCard(props: propsType) {
-
-  const db = getFirestore()
+  const user = useContext(UserContext)
   const reactDocRef = doc(db, "userReactPosts", props.userId)
   const postDocRef = doc(db, "posts", props.post.idPost)
   const [loadingProcessReact, setLoadingProcessReact] = useState<boolean>(false)
 
   let headerPost: headerPostType = {
-    username: props.post.username,
+    username: `${user?.firstName} ${user?.lastName}`,
     createdAt: props.post.createdAt ? props.post.createdAt : null,
     accessType: props.post.accessType,
   }
@@ -191,7 +191,10 @@ function PostCard(props: propsType) {
       />
       
       <Comment />
-      <InputComment />
+      <InputComment
+        userId={props.userId}
+        idPost={props.post.idPost}
+      />
     </div>
   )
 }

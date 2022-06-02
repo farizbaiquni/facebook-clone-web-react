@@ -1,5 +1,6 @@
 export type userType = {
-    firstName?: String,
+    idUser: String,
+    firstName: String,
     lastName: String,
     email: String,
     birthDate: Date, 
@@ -18,18 +19,16 @@ export type userProfileType = {
 export type postType = {
     idPost              : string,
     idUser              : string,
-    username            : string,
     textPost            : string,
     feeling             : string,
     location            : string,
     tagTotal            : number,
-    tagNames            : Array<string>,
+    shareTotal          : number,
+    commentTotal        : number,
     createdAt           : Date,
     contentType         : string,
     contentAttachment   : string,
     accessType          : string,
-    shareTotal          : number,
-    shareNames          : Array<string>,
     reactTotalLike      : number,
     reactTotalLove      : number,
     reactTotalCare      : number,
@@ -37,29 +36,8 @@ export type postType = {
     reactTotalWow       : number,
     reactTotalSad       : number,
     reactTotalAngry     : number,
-    reactNamesLike      : Array<string>,
-    reactNamesLove      : Array<string>,
-    reactNamesCare      : Array<string>,
-    reactNamesHaha      : Array<string>,
-    reactNamesWow       : Array<string>,
-    reactNamesSad       : Array<string>,
-    reactNamesAngry     : Array<string>,
 } 
 
-export type defaultDisplayedComment = {
-     commentIdUser         : string,
-     commentText           : string,
-     commentContentAttachment : string
-     commentCreatedAt      : Date,
-     commentReplay         : Array<string>,
-     commentTotalLike     : number,
-     commentTotalLove     : number,
-     commentTotalCare     : number,
-     commentTotalHaha     : number,
-     commentTotalWow      : number,
-     commentTotalSad      : number,
-     commentTotalAngry    : number,
-}
 
 export type commentReactDetails = {
     idUser: string,
@@ -68,8 +46,8 @@ export type commentReactDetails = {
     type: reactType,
 }
 
-export type reactType = "like" | "love" | "care" | "haha" | "wow" | "sad" | "angry"
 
+export type reactType = "like" | "love" | "care" | "haha" | "wow" | "sad" | "angry"
 export const reactTypeOption = {
     like: "like",
     love: "love",
@@ -78,4 +56,13 @@ export const reactTypeOption = {
     wow: "wow",
     sad: "sad",
     angry: "angry",
+}
+
+export type commentType = "text-only" | "photo" | "video" | "gif" | "sticker"
+export const commentTypeOption = {
+    text: "text-only", 
+    photo: "photo", 
+    video: "video", 
+    gif: "gif", 
+    sticker: "sticker",
 }
