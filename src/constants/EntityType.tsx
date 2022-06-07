@@ -66,3 +66,9 @@ export const commentTypeOption = {
     gif: "gif", 
     sticker: "sticker",
 }
+
+
+export enum radioGenderOption {
+    male = "male",
+    female = "female"
+}

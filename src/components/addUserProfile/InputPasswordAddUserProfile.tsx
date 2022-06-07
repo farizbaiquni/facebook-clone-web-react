@@ -6,11 +6,10 @@ type propsType = {
     placeholder: string,
     invalid: string,
     onChangeValue: (value: string) => void,
-    invalidLeftPosition: boolean,
     nextButtonClicked: boolean,
 }
 
-function InputTextAddUserProfile(props: propsType) {
+function InputPasswordAddUserProfile(props: propsType) {
     const [clicked, setClicked] = useState<Boolean>(false)
     const [showToolTip, setShowToolTip] = useState(false)
 
@@ -36,25 +35,26 @@ function InputTextAddUserProfile(props: propsType) {
     }, [props.nextButtonClicked])
 
     return (
-        <div className={`flex ${!props.invalidLeftPosition && 'flex flex-row-reverse'}`}>
+        <div className=' flex'>
             <div className=' relative'>
                 {
                     (clicked && showToolTip) && (
-                        <p className={`absolute text-sm bg-red-700 text-white rounded-sm p-3 ${props.invalidLeftPosition ? 'right-3' : 'left-3'} break-words bottom-0 ${calculateInvalideWidth(props.invalid)}`}>
+                        <p className={`absolute text-sm bg-red-700 text-white rounded-sm p-3 right-3 break-words bottom-0 ${calculateInvalideWidth(props.invalid)}`}>
                             {props.invalid}
                         </p>
                     )
                 }
             </div>
             <div className="relative text-left w-full">
-                <input type="text" onBlur={ () => { (clicked === false) && setClicked(true); setShowToolTip(false); }} onFocus={() => props.value.trim().length <= 0 && setShowToolTip(true)}  className={`peer rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-0 ${clicked && (props.value.trim().length <= 0)  && "ring-red-500 ring-1"}`} name={props.placeholder} placeholder={props.placeholder} onChange={(e) => props.onChangeValue(e.target.value) }/>
+                <input type="password" onBlur={ () => { (clicked === false) && setClicked(true); setShowToolTip(false); }} onFocus={() => props.value.trim().length <= 0 && setShowToolTip(true)}  className={`peer rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-0 ${clicked && (props.value.trim().length <= 0)  && "ring-red-500 ring-1"}`} name={props.placeholder} placeholder={props.placeholder} onChange={(e) => props.onChangeValue(e.target.value) }/>
 
                 {
                     clicked && (props.value.trim().length <= 0) && (
-                        <span className=' peer-focus:hidden' >
+                        <span >
                             <InvalidInput /> 
                         </span>
                     )
+                
                 }
                 
             </div>
@@ -62,5 +62,4 @@ function InputTextAddUserProfile(props: propsType) {
         
     )
 }
-
-export default InputTextAddUserProfile
+export default InputPasswordAddUserProfile
