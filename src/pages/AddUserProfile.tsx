@@ -1,28 +1,68 @@
 import { getAuth } from 'firebase/auth'
-import React, { useContext, useState } from 'react'
+import { useContext, useState } from 'react'
 import { AuthContext } from '../contexts/AuthContext'
+import { db } from '../lib/firebase'
 import InputTextAddUserProfile from '../components/addUserProfile/InputTextAddUserProfile'
 import InputDateAddUserProfile from '../components/addUserProfile/InputDateAddUserProfile'
 import InputPasswordAddUserProfile from '../components/addUserProfile/InputPasswordAddUserProfile'
 import InputRadioAddUserProfile from '../components/addUserProfile/InputRadioAddUserProfile'
+import { doc, runTransaction, Timestamp, writeBatch } from 'firebase/firestore'
+import { UserContext } from '../contexts/UserContext'
 
 function AddUserProfile() {
   const auth = useContext(AuthContext)
+  const user = useContext(UserContext)
   const [firstName, setFirstName] = useState<string>('')
   const [lastName, setLastName] = useState<string>('')
-  const [email, setEmail] = useState<string>('')
-  const [password, setPasword] = useState<string>('')
-  const [birthDate, setBirthDate] = useState<string>('')
+  const [birthDate, setBirthDate] = useState<Timestamp | null>(null)
   const [gender, setGender] = useState<string | null>(null)
   const [nextButtonClicked, setNextButtonClicked] = useState<boolean>(false)
-  
+
   const handleAddUserProfile = async(e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const userRef = doc(db, "users", auth?.uid!);
+    const userProfileRef = doc(db, "userProfile", auth?.uid!);
+    const userDataUpdate = {
+      firstName: firstName, 
+      lastName: lastName, 
+      birthDate: birthDate, 
+      gender: gender, 
+    }
+    const userDataSet = {
+      idUser: auth?.uid,
+      firstName: firstName, 
+      lastName: lastName, 
+      email: auth?.email,
+      birthDate: birthDate, 
+      photoProfile: '',
+      gender: gender, 
+      createAt: Timestamp.now(),
+      friends: [],
+    }
+    const userProfileData = {
+      idUser: auth?.uid!!, 
+      username: firstName + ' ' + lastName, 
+      photoUrl: '',
+    }
+    try {
+      await runTransaction(db, async (transaction) => {
+        const sfDoc = await transaction.get(userRef);
+        if (!sfDoc.exists()) {
+          transaction.set(userRef, userDataSet);
+          transaction.set(userProfileRef, userProfileData);
+        } else {
+          transaction.update(userRef, userDataUpdate);
+          transaction.set(userProfileRef, userProfileData);
+        }
+      });
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   return (
     <div className=" h-screen flex items-center justify-center container w-full">
-      <form action="" onSubmit={(event) => { setNextButtonClicked(true); handleAddUserProfile(event)}} className=' flex flex-col p-7 rounded-md shadow-md shadow-gray-400'>
+      <form action="" onSubmit={(event) => { auth?.uid && setNextButtonClicked(true); handleAddUserProfile(event) }} className=' flex flex-col p-7 rounded-md shadow-md shadow-gray-400'>
         <h1 className=' text-left mb-7 text-3xl font-bold'>Profile : </h1>
         <ul>
           <li className=' flex'>
@@ -46,30 +86,11 @@ function AddUserProfile() {
             </span>
           </li>
           <li className=' mt-3'>
-            <InputTextAddUserProfile
-              value={lastName}
-              placeholder="Email"
-              invalid="You'II use this when you log in and if your ever need to reset your password"
-              onChangeValue={(value: string) => setLastName(value)}
-              invalidLeftPosition = {true}
-              nextButtonClicked = {nextButtonClicked}
-            />
-          </li>
-          <li className=' mt-3'>
-            <InputPasswordAddUserProfile
-              value={lastName}
-              placeholder="New Password"
-              invalid="Enter a combination of at least six numbers, letters, punchtuation marks (such as ! and &)."
-              onChangeValue={(value: string) => setLastName(value)}
-              nextButtonClicked = {nextButtonClicked}
-            />
-          </li>
-          <li className=' mt-3'>
             <InputDateAddUserProfile
-                value={lastName}
+                value={birthDate}
                 placeholder="Date of Birth"
                 invalid="It looks like you've entered the wrong info, Please make sure that you use your real date of birth."
-                onChangeValue={(value: string) => setLastName(value)}
+                onChangeValue={(value: Timestamp) => setBirthDate(value)}
                 nextButtonClicked = {nextButtonClicked}
             />
           </li>

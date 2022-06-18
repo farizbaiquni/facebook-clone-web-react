@@ -1,6 +1,6 @@
-import { arrayRemove, arrayUnion, doc, getFirestore, runTransaction } from 'firebase/firestore'
-import React, { memo, useContext, useEffect, useState } from 'react'
-import { postType, reactTypeOption } from '../../constants/EntityType'
+import { arrayRemove, arrayUnion, collection, doc, getDoc, getDocs, getFirestore, limit, orderBy, query, runTransaction, Timestamp, where } from 'firebase/firestore'
+import { memo, useContext, useEffect, useState, useCallback } from 'react'
+import { commentType, postType, reactTypeOption } from '../../constants/EntityType'
 import { postType as postAccessType } from '../../constants/ModalPostInput'
 import { headerPostType } from '../../constants/PostComponentType'
 import { UserContext } from '../../contexts/UserContext'
@@ -22,10 +22,43 @@ type propsType = {
 
 
 function PostCard(props: propsType) {
+  console.log("====== RE-RENDER CARD POST - " + props.post.textPost + " ======")
+
   const user = useContext(UserContext)
   const reactDocRef = doc(db, "userReactPosts", props.userId)
   const postDocRef = doc(db, "posts", props.post.idPost)
   const [loadingProcessReact, setLoadingProcessReact] = useState<boolean>(false)
+  const [firstFetchCommentDone, setFirstFetchCommentDone] = useState(false)
+  
+  const [comments, setComments] = useState<commentType[]>([])
+
+  const firstFetchComment = async() => {
+    const q = query(collection(db, "comments"), where("idPost", "==", props.post.idPost), orderBy('createdAt'), limit(1));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        const tempComments: commentType = {
+          idUser :doc.data().idUser,
+          idPost : doc.data().idPost,
+          text : doc.data().text,
+          attachments: doc.data().attachments,
+          attachmentType : doc.data().attachmentType,
+          createdAt : doc.data().createdAt,
+          reactTotalReplay : doc.data().reactTotalReplay ?? 0,
+          reactTotalLike : doc.data().reactTotalLike ?? 0,
+          reactTotalLove : doc.data().reactTotalLove ?? 0,
+          reactTotalCare : doc.data().reactTotalCare ?? 0,
+          reactTotalHaha : doc.data().reactTotalHaha ?? 0,
+          reactTotalWow : doc.data().reactTotalWow ?? 0,
+          reactTotalSad : doc.data().reactTotalSad ?? 0,
+          reactTotalAngry : doc.data().reactTotalAngry ?? 0,
+        }
+        console.log(tempComments)
+        setComments([tempComments])
+        setFirstFetchCommentDone(true)
+    })
+
+  }
+
 
   let headerPost: headerPostType = {
     username: `${user?.firstName} ${user?.lastName}`,
@@ -36,16 +69,9 @@ function PostCard(props: propsType) {
   let totalReact = props.post.reactTotalAngry + props.post.reactTotalCare + props.post.reactTotalHaha +
   props.post.reactTotalLike + props.post.reactTotalLove + props.post.reactTotalSad + props.post.reactTotalWow
 
-
-  console.log("====== POST CARD RE-RENDER " + props.post.textPost + " ======")
-
-  const handleRemoveLike = async () => {
+  const handleRemoveLike = useCallback( async() => {
     console.log("HANDLE REMOVE LIKE")
     if(props.statusListeningPosts !== undefined && props.reactStatus === reactTypeOption.like){
-      // const reactRef = doc(db, "userReactPosts", props.userId);
-      // await updateDoc(reactRef, {
-      //     like: arrayRemove(props.post.idPost)
-      // });  
       try {
         setLoadingProcessReact(true)
         await runTransaction(db, async (transaction) => {
@@ -62,95 +88,80 @@ function PostCard(props: propsType) {
         });
         setLoadingProcessReact(false)
       } catch (error) { setLoadingProcessReact(false) }
-      
     } 
-  }
+  }, [props.statusListeningPosts, props.reactStatus])
 
-  const handleAddLike = async () => {
+
+  const handleAddLike = useCallback(async () => {
     console.log("HANDLE ADD LIKE")
-    if (props.statusListeningPosts !== null){
-      if(props.statusListeningPosts === undefined){
-        // await setDoc(doc(db, "userReactPosts", props.userId), {
-        //   like: [props.post.idPost],
-        //   love: [],
-        //   care: [],
-        //   haha: [],
-        //   wow: [],
-        //   sad: [],
-        //   angry: [],
-        // });
-        
-        // ================= COLLECTION USER REACT NOT CREATE YET =================
-        try {
-          setLoadingProcessReact(true)
-          await runTransaction(db, async (transaction) => {
-            const sfDoc = await transaction.get(postDocRef);
-            if (sfDoc.exists()) {
-              const tempTotalLike = sfDoc.data().reactTotalLike + 1
-              if (tempTotalLike < 20){
-                transaction.set(reactDocRef, {
-                  like: [props.post.idPost],
-                  love: [],
-                  care: [],
-                  haha: [],
-                  wow: [],
-                  sad: [],
-                  angry: [],
-                })
-                transaction.update(postDocRef, {
-                  reactTotalLike: tempTotalLike,
-                })
-              } else {
-                transaction.set(reactDocRef, {
-                  like: [props.post.idPost],
-                  love: [],
-                  care: [],
-                  haha: [],
-                  wow: [],
-                  sad: [],
-                  angry: [],
-                })
-              }
-            } 
-            setLoadingProcessReact(false)
-          });
-        } catch (error) { setLoadingProcessReact(false) }
-
-      } else {
-        // ================= COLLECTION USER REACT HAVE BEEN CREATED =================
-        // const reactRef = doc(db, "userReactPosts", props.userId);
-        // await updateDoc(reactRef, {
-        //     like: arrayUnion(props.post.idPost)
-        // });
-
-        try {
-          setLoadingProcessReact(true)
-          await runTransaction(db, async (transaction) => {
-            const sfDoc = await transaction.get(postDocRef);
-            if (sfDoc.exists()) {
-              const tempTotalLike = sfDoc.data().reactTotalLike + 1
-              if (tempTotalLike < 20){
-                transaction.update(reactDocRef, {
-                  like: arrayUnion(props.post.idPost)
-                })
-                transaction.update(postDocRef, {
-                  reactTotalLike: tempTotalLike,
-                })
-              } else {
-                transaction.update(reactDocRef, {
-                  like: arrayUnion(props.post.idPost)
-                })
-              }
-            } 
-          });
+    if(props.statusListeningPosts == null){
+      // ================= COLLECTION USER REACT NOT CREATE YET =================
+      try {
+        setLoadingProcessReact(true)
+        await runTransaction(db, async (transaction) => {
+          const sfDoc = await transaction.get(postDocRef);
+          if (sfDoc.exists()) {
+            const tempTotalLike = sfDoc.data().reactTotalLike + 1
+            if (tempTotalLike < 20){
+              transaction.set(reactDocRef, {
+                like: [props.post.idPost],
+                love: [],
+                care: [],
+                haha: [],
+                wow: [],
+                sad: [],
+                angry: [],
+              })
+              transaction.update(postDocRef, {
+                reactTotalLike: tempTotalLike,
+              })
+            } else {
+              transaction.set(reactDocRef, {
+                like: [props.post.idPost],
+                love: [],
+                care: [],
+                haha: [],
+                wow: [],
+                sad: [],
+                angry: [],
+              })
+            }
+          } 
           setLoadingProcessReact(false)
-        } catch (error) { setLoadingProcessReact(false) }
-      }
+        });
+      } catch (error) { setLoadingProcessReact(false) }
+
+    } else {
+      try {
+        setLoadingProcessReact(true)
+        await runTransaction(db, async (transaction) => {
+          const sfDoc = await transaction.get(postDocRef);
+          if (sfDoc.exists()) {
+            const tempTotalLike = sfDoc.data().reactTotalLike + 1
+            if (tempTotalLike < 20){
+              transaction.update(reactDocRef, {
+                like: arrayUnion(props.post.idPost)
+              })
+              transaction.update(postDocRef, {
+                reactTotalLike: tempTotalLike,
+              })
+            } else {
+              transaction.update(reactDocRef, {
+                like: arrayUnion(props.post.idPost)
+              })
+            }
+          } 
+        });
+        setLoadingProcessReact(false)
+      } catch (error) { setLoadingProcessReact(false) }    
     } 
-    
-  }
+  }, [props.statusListeningPosts])
+
 
   useEffect(() => {
+    if(firstFetchCommentDone === false) {
+      firstFetchComment()
+    }
   }, [])
 
   return (
@@ -189,12 +200,11 @@ function PostCard(props: propsType) {
         handleRemoveLike={handleRemoveLike} 
         loadingProcessReact={loadingProcessReact}
       />
-      
-      <Comment />
-      <InputComment
-        userId={props.userId}
-        idPost={props.post.idPost}
-      />
+    
+      {
+        comments.length > 0 && comments.map( comment => (<Comment comment={comment}/>))
+      }
+      <InputComment userId={props.userId} idPost={props.post.idPost} />
     </div>
   )
 }

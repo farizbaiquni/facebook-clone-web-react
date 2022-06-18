@@ -1,28 +1,27 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { FirebaseContext } from '../contexts/FirebaseContext';
+import { FirebaseContext } from "../contexts/FirebaseContext";
 
-export const useAuthListener = () => { 
-    
-    const firebase = useContext(FirebaseContext)
-    const auth = getAuth()
-    const[user, setUser] = useState(JSON.parse(localStorage.getItem('userCredentialFbClone') || '{}'))
+export const useAuthListener = () => {
+  const firebase = useContext(FirebaseContext);
+  const auth = getAuth();
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("aa") || "{}")
+  );
 
-    useEffect(() => {
+  useEffect(() => {
+    const listener = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        localStorage.setItem("userCredentialFbClone", JSON.stringify(user));
+        setUser(user);
+      } else {
+        localStorage.removeItem("userCredentialFbClone");
+        setUser(null);
+      }
+    });
 
-        const listener = onAuthStateChanged( auth, (user) => {
-            if (user) {
-                localStorage.setItem('userCredentialFbClone', JSON.stringify(user))
-                setUser(user)
-            } else {
-                localStorage.removeItem('userCredentialFbClone')
-                setUser('{}')
-            }
-        });
+    return () => listener();
+  }, [auth, firebase]);
 
-        return () => listener()
-
-    }, [auth, firebase] )
-
-    return user
-}
+  return user;
+};

@@ -1,8 +1,9 @@
 import { collection, DocumentData, getDocs, getFirestore, limit, orderBy, query, QueryDocumentSnapshot, where, doc, getDoc, onSnapshot } from 'firebase/firestore';
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { AuthContext } from '../../contexts/AuthContext';
 import { postType, reactTypeOption } from '../../constants/EntityType';
 import PostCard from './PostCard';
+import { db } from '../../lib/firebase';
 import { useReactsListener } from '../../hooks/use-reacts-listener';
 
 
@@ -17,9 +18,9 @@ type reactPostsType = {
 }
 
 export default function Post() {
+
   console.log("====== RE-RENDER POST ======")
 
-  const db = getFirestore()
   const auth = useContext(AuthContext)
   const [statusListeningPosts, setStatusListeningPosts] = useState<Boolean | null | undefined>(null)
   const [posts, setPosts] = useState<Array<postType>>([])
@@ -29,11 +30,10 @@ export default function Post() {
   const docRef = doc(db, "userReactPosts", auth!!.uid!!);
 
 
-
-  const checkReactPostStatus = (idPost: string) => {
-    console.log("CALCULATING.......")
+  const checkReactPostStatus = useCallback((idPost: string) => {
+    // console.log("CALCULATING.......")
     if(reactPosts !== null || reactPosts !== undefined){
-      for(let reactType in reactPosts){
+      for(const reactType in reactPosts){
         switch(reactType){
           case reactTypeOption.like:
             if(reactPosts[reactType as keyof reactPostsType].has(idPost)){
@@ -47,8 +47,8 @@ export default function Post() {
       }
     } 
     return null
-  }
-
+  }, [reactPosts]
+)
 
 
   // FIRST QUERY POSTS
@@ -98,7 +98,7 @@ export default function Post() {
           "reactTotalWow"       :  post.data().reactTotalWow ? Number( post.data().reactTotalWow.toString() ) : 0,
           "reactTotalSad"       :  post.data().reactTotalSad ? Number( post.data().reactTotalSad.toString() ) : 0,
           'reactTotalAngry'     :  post.data().reactTotalAngry ? Number( post.data().reactTotalAngry.toString() ) : 0,
-        } 
+        }
         tempPosts.add(tempPost)
       })
       setPosts(Array.from(tempPosts))

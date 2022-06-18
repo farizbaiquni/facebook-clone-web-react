@@ -14,11 +14,11 @@ function Stories() {
         <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="" className=' absolute h-10 w-10 rounded-full border-4 border-white left-0 right-0 mx-auto bottom-8' />
       </div>
 
-      {
+      {/* {
         stories.map((value, index) => 
          (stories.length === (index + 1)) ? <LastStory /> : <Story />
         )
-      }
+      } */}
       
     </div>
   )

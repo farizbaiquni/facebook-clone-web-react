@@ -6,7 +6,7 @@ type propsType = {
     friend: {
       idUser: string
       photoUrl: string
-      name: string
+      username: string
     },
     type: 'except' | 'specific',
     addAccessExceptions: (idUser: String) => void,
@@ -47,7 +47,7 @@ function SelectUserProfile(props: propsType) {
       }
 
 
-      <h1 className=' flex-1 ml-3 font-semibold line-clamp-1'>{props.friend.name}</h1>
+      <h1 className=' flex-1 ml-3 font-semibold line-clamp-1'>{props.friend.username}</h1>
 
 
       {

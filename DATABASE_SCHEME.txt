@@ -7,13 +7,15 @@ birth_date          : string
 photo_profile       : string    -> nullable
 gender              : string
 create-at           : string
-friends[id_user]    : 
+friends             : [ id_user ]
 
 
-USER PROFILE   -> id -> idUser
+
+USERS PROFILE   -> id -> idUser
 idUser: string
 username: string,
-photoUrl: string,
+photo_profile: string,
+
 
 
 FRIEND_REQUESTS
@@ -22,9 +24,11 @@ receiver
 date
 
 
+
 NOT SUGGESTED FRIENDS
 userId: String
 idList: String
+
 
 
 SEARCH_POSTS
@@ -32,6 +36,7 @@ idPost,
 access_type<public friends, friends_except, specific_friends, only_me, custom>,
 access_allowed[]
 created_at  
+
 
 
 POSTS
@@ -69,42 +74,60 @@ angry   [id_post]
 
 
 SHARE_DETAIL
-idUser,
-
-
-COMMENTS (Berhubungan dengan collection posts)
-idUser,
-text,
-content_attachment {url, type<gif / photo : string>}
-comment_type    : string,
-create_at,
-total_replay    : int,
-total_like      : int,
-total_love      : int,
-total_care      : int,
-total_haha      : int,
-total_wow       : int,
-total_sad       : int,
-total_angry     : int,
-COMMENTS_REACT_DETAIL
+idPost  : string
+idUser  : [],
 
 
 
-COMMENTS_REACT_DETAIL
-idUser,
-name
-photoUrl,
-type <like / love / care / haha / wow /sad / angry>,
+COMMENTS              : (Berhubungan dengan collection posts)
+idUser                : string,
+idPost                : string
+text                  : string,
+attachments           : [] -> nullable
+attachmentType        : text-only | sticker |  gif | photo | video 
+created_at            : Timestamps,
+react_total_replay    : int,
+react_total_like      : int,
+react_total_love      : int,
+react_total_care      : int,
+react_total_haha      : int,
+react_total_wow       : int,
+react_total_sad       : int,
+react_total_angry     : int,
 
 
-LIKES / LOVES
-id_user,
-photo_url,
-name,
+
+COMMENTS_DETAIL
+idComment       : string,
+react_like      : int,
+react_love      : int,
+react_care      : int,
+react_haha      : int,
+react_wow       : int,
+react_sad       : int,
+react_angry     : int,
 
 
 
-=== ATURAN COMMENTS ===
+COMMENTS_REPLY
+idUser                : string,
+idCommented           : string
+text                  : string,
+attachments           : [] -> nullable
+attachmentType        : text-only | sticker |  gif | photo | video 
+created_at            : Timestamps,
+react_total_replay    : int,
+react_total_like      : int,
+react_total_love      : int,
+react_total_care      : int,
+react_total_haha      : int,
+react_total_wow       : int,
+react_total_sad       : int,
+react_total_angry     : int,
+
+
+
+=========  ATURAN COMMENTS =========
 jika di halaman khusus post :
 - maksimal tampilan awal komen 6
 - replay tidak ditampilkan, hanya jumlah replay

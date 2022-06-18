@@ -30,7 +30,6 @@ function InputRadioAddUserProfile(props: propsType) {
     }
 
     const onChangeRadioGender = (event: ChangeEvent<HTMLInputElement>) => {
-        alert(event.target.value)
         props.onChangeValue(event.target.value)
     }
 

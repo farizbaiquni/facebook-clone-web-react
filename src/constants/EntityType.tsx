@@ -13,7 +13,7 @@ export type userType = {
 export type userProfileType = {
     idUser: string
     photoUrl: string
-    name: string
+    username: string
 }
 
 export type postType = {
@@ -38,15 +38,6 @@ export type postType = {
     reactTotalAngry     : number,
 } 
 
-
-export type commentReactDetails = {
-    idUser: string,
-    name: string
-    photoUrl: string,
-    type: reactType,
-}
-
-
 export type reactType = "like" | "love" | "care" | "haha" | "wow" | "sad" | "angry"
 export const reactTypeOption = {
     like: "like",
@@ -58,8 +49,8 @@ export const reactTypeOption = {
     angry: "angry",
 }
 
-export type commentType = "text-only" | "photo" | "video" | "gif" | "sticker"
-export const commentTypeOption = {
+export type commentAttachmentType = "text-only" | "photo" | "video" | "gif" | "sticker"
+export const commentAttachmentTypeOption = {
     text: "text-only", 
     photo: "photo", 
     video: "video", 
@@ -71,4 +62,21 @@ export const commentTypeOption = {
 export enum radioGenderOption {
     male = "male",
     female = "female"
+}
+
+export type commentType = {
+    idUser : string,
+    idPost : string,
+    text : string,
+    attachments : string[] | null,
+    attachmentType : string,
+    createdAt : string,
+    reactTotalReplay : number,
+    reactTotalLike : number,
+    reactTotalLove : number,
+    reactTotalCare : number,
+    reactTotalHaha : number,
+    reactTotalWow : number,
+    reactTotalSad : number,
+    reactTotalAngry : number,
 }

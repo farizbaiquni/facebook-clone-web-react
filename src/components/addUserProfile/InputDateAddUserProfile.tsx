@@ -1,12 +1,13 @@
+import { Timestamp } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import InvalidInput from '../InvalidInput'
 import './style.css'
 
 type propsType = {
-    value: string,
+    value: Timestamp | null,
     placeholder: string,
     invalid: string,
-    onChangeValue: (value: string) => void,
+    onChangeValue: (value: Timestamp) => void,
     nextButtonClicked: boolean,
 }
 
@@ -47,10 +48,10 @@ function InputDateAddUserProfile(props: propsType) {
                 }
             </div>
             <div className="relative text-left w-full">
-                <input type="date" onBlur={ () => { (clicked === false) && setClicked(true); setShowToolTip(false); }} onFocus={() => props.value.trim().length <= 0 && setShowToolTip(true)}  className={`peer rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-0 ${clicked && (props.value.trim().length <= 0)  && "ring-red-500 ring-1"}`} name={props.placeholder} placeholder={props.placeholder} onChange={(e) => props.onChangeValue(e.target.value) }/>
+                <input type="date" onBlur={ () => { (clicked === false) && setClicked(true); setShowToolTip(false); }} onFocus={() => props.value === null && setShowToolTip(true)}  className={`peer rounded-sm border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-0 ${clicked && (props.value === null)  && "ring-red-500 ring-1"}`} name={props.placeholder} placeholder={props.placeholder} onChange={(e) => props.onChangeValue(Timestamp.fromDate(new Date(e.target.value))) }/>
 
                 {
-                    clicked && (props.value.trim().length <= 0) && (
+                    clicked && (props.value === null) && (
                         <span className=' peer-focus:hidden' >
                             <InvalidInput /> 
                         </span>

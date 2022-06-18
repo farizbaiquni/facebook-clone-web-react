@@ -17,8 +17,7 @@ type propsType = {
 
 export default function ReactPost(props: propsType) {
 
-  console.log("============ RE-RENDER REACT POST ============")
-  console.log(props.reactStatus)
+  console.log("====== RE-RENDER REACT POST ======")
   const user = useContext(UserContext)
   const [displayedReactIcons, setDisplayedReactIcons] = useState<Set<string> | null>(null)
   
@@ -140,7 +139,7 @@ export default function ReactPost(props: propsType) {
               switch(props.reactStatus) {
                 case reactTypeOption.like:
                   return <LikeIcon/>
-  
+
                 case reactTypeOption.love:
                   return <LoveIcon/>
   
@@ -156,13 +155,13 @@ export default function ReactPost(props: propsType) {
                     Array.from(displayedReactIcons).map( key => { 
                       switch (key){
                         case reactTypeOption.like:
-                          return <LikeIcon/>
+                          return <span key={key}><LikeIcon/></span>
           
                         case reactTypeOption.love:
-                          return <LoveIcon/>
+                          return <span key={key}><LoveIcon/></span>
           
                         case reactTypeOption.care:
-                          return <CareIcon/>
+                          return<span key={key}><CareIcon/></span>
                       } 
                    })
                   )
@@ -172,13 +171,13 @@ export default function ReactPost(props: propsType) {
                   Array.from(displayedReactIcons).map( key => { 
                     switch (key){
                       case reactTypeOption.like:
-                        return <LikeIcon/>
+                        return <span key={key}><LikeIcon/></span>
         
                       case reactTypeOption.love:
-                        return <LoveIcon/>
+                        return <span key={key}><LoveIcon/></span>
         
                       case reactTypeOption.care:
-                        return <CareIcon/>
+                        return <span key={key}><CareIcon/></span>
                     } 
                  })
                 )
