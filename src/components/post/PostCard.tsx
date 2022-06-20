@@ -1,6 +1,6 @@
-import { arrayRemove, arrayUnion, collection, doc, getDoc, getDocs, getFirestore, limit, orderBy, query, runTransaction, Timestamp, where } from 'firebase/firestore'
+import { arrayRemove, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, limit, orderBy, query, runTransaction, Timestamp, where } from 'firebase/firestore'
 import { memo, useContext, useEffect, useState, useCallback } from 'react'
-import { commentType, postType, reactTypeOption } from '../../constants/EntityType'
+import { idNewCommentsType, commentDisplayedType, postType, reactTypeOption } from '../../constants/EntityType'
 import { postType as postAccessType } from '../../constants/ModalPostInput'
 import { headerPostType } from '../../constants/PostComponentType'
 import { UserContext } from '../../contexts/UserContext'
@@ -10,6 +10,7 @@ import Comment from './Comment'
 import ContentPost from './ContentPost'
 import HeaderPost from './HeaderPost'
 import InputComment from './InputComment'
+import NewComment from './NewComment'
 import ReactPost from './ReactPost'
 import TextStatusPost from './TextStatusPost'
 
@@ -30,14 +31,35 @@ function PostCard(props: propsType) {
   const [loadingProcessReact, setLoadingProcessReact] = useState<boolean>(false)
   const [firstFetchCommentDone, setFirstFetchCommentDone] = useState(false)
   
-  const [comments, setComments] = useState<commentType[]>([])
+  const [timeFirstRender, setTimeFirstRender] = useState(Timestamp.now())
+  const [comments, setComments] = useState<commentDisplayedType[]>([])
+  const [newComments, setNewComments] = useState<commentDisplayedType[]>([])
+  const [idNewComments, setIdNewComments] = useState<idNewCommentsType[]>([])
+
+
+  let headerPost: headerPostType = {
+    username: `${user?.firstName} ${user?.lastName}`,
+    createdAt: props.post.createdAt ? props.post.createdAt : null,
+    accessType: props.post.accessType,
+  }
+
+  let totalReact = props.post.reactTotalAngry + props.post.reactTotalCare + props.post.reactTotalHaha +
+  props.post.reactTotalLike + props.post.reactTotalLove + props.post.reactTotalSad + props.post.reactTotalWow
+
 
   const firstFetchComment = async() => {
-    const q = query(collection(db, "comments"), where("idPost", "==", props.post.idPost), orderBy('createdAt'), limit(1));
+    const q = query(
+      collection(db, "comments"), 
+        where("idPost", "==", props.post.idPost), 
+        where("createdAt", "<", timeFirstRender), 
+        orderBy('createdAt'), 
+        limit(1)
+      );
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
-        const tempComments: commentType = {
-          idUser :doc.data().idUser,
+        const tempComments: commentDisplayedType = {
+          idComment : doc.id, 
+          idUser : doc.data().idUser,
           idPost : doc.data().idPost,
           text : doc.data().text,
           attachments: doc.data().attachments,
@@ -51,23 +73,34 @@ function PostCard(props: propsType) {
           reactTotalWow : doc.data().reactTotalWow ?? 0,
           reactTotalSad : doc.data().reactTotalSad ?? 0,
           reactTotalAngry : doc.data().reactTotalAngry ?? 0,
+          idCommentTemp: null,
         }
-        console.log(tempComments)
         setComments([tempComments])
         setFirstFetchCommentDone(true)
     })
-
   }
 
+  const addNewComment = useCallback((comment: commentDisplayedType) => {
+    setNewComments(prevstate => [comment, ...prevstate])
+  }, [newComments])
 
-  let headerPost: headerPostType = {
-    username: `${user?.firstName} ${user?.lastName}`,
-    createdAt: props.post.createdAt ? props.post.createdAt : null,
-    accessType: props.post.accessType,
-  }
 
-  let totalReact = props.post.reactTotalAngry + props.post.reactTotalCare + props.post.reactTotalHaha +
-  props.post.reactTotalLike + props.post.reactTotalLove + props.post.reactTotalSad + props.post.reactTotalWow
+  const handleAddIdComments = useCallback((tempId: string, realId: string) => {
+    const temp: idNewCommentsType = {
+      tempId: tempId,
+      realId: realId,
+    }
+    setIdNewComments(prev => [...prev, temp])
+  }, [idNewComments])
+
+
+  const deleteComment = useCallback( async(idComment: string, deletedId: string) => {
+    console.log("=== DELETE COMMENT ===")
+    await deleteDoc(doc(db, "comments", idComment)).then(() => {
+      setNewComments(prevState => prevState.filter(comment => comment.idCommentTemp !== deletedId))
+    });
+  }, [newComments])
+
 
   const handleRemoveLike = useCallback( async() => {
     console.log("HANDLE REMOVE LIKE")
@@ -162,7 +195,8 @@ function PostCard(props: propsType) {
     if(firstFetchCommentDone === false) {
       firstFetchComment()
     }
-  }, [])
+
+  }, [comments, idNewComments, newComments])
 
   return (
     <div className="post mb-10 bg-white w-600 p-5 rounded-md shadow-slate-400 shadow-sm border-0 border-gray-400">
@@ -200,11 +234,33 @@ function PostCard(props: propsType) {
         handleRemoveLike={handleRemoveLike} 
         loadingProcessReact={loadingProcessReact}
       />
+
+      {
+        newComments.length > 0 && newComments.map( comment => (
+          <NewComment 
+            key={comment.idCommentTemp}
+            comment={comment} 
+            username={user?.firstName + " " + user?.lastName}
+            photoUrl={user?.photoProfile.toString()}
+            idNewComments={idNewComments}
+            deleteComment={deleteComment}
+          />
+        ))
+      }
     
       {
-        comments.length > 0 && comments.map( comment => (<Comment comment={comment}/>))
+        comments.length > 0 && comments.map( comment => (
+          <Comment key={comment.idComment} comment={comment}/>
+        ))
       }
-      <InputComment userId={props.userId} idPost={props.post.idPost} />
+      
+      <InputComment 
+        userId={props.userId} 
+        idPost={props.post.idPost} 
+        addNewComment={addNewComment}
+        handleAddIdComments={handleAddIdComments}
+       />
+
     </div>
   )
 }
