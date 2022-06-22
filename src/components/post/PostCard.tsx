@@ -235,6 +235,13 @@ function PostCard(props: propsType) {
         loadingProcessReact={loadingProcessReact}
       />
 
+      <InputComment 
+        userId={props.userId} 
+        idPost={props.post.idPost} 
+        addNewComment={addNewComment}
+        handleAddIdComments={handleAddIdComments}
+       />
+
       {
         newComments.length > 0 && newComments.map( comment => (
           <NewComment 
@@ -253,13 +260,6 @@ function PostCard(props: propsType) {
           <Comment key={comment.idComment} comment={comment}/>
         ))
       }
-      
-      <InputComment 
-        userId={props.userId} 
-        idPost={props.post.idPost} 
-        addNewComment={addNewComment}
-        handleAddIdComments={handleAddIdComments}
-       />
 
     </div>
   )
