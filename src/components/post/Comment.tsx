@@ -5,7 +5,7 @@ import { db } from '../../lib/firebase'
 
 type propsType = {
   comment: commentDisplayedType,
-  
+  deleteComment: (deletedIdComment: string) => void,
 }
 
 export default function Comment(props: propsType) {
@@ -70,7 +70,7 @@ export default function Comment(props: propsType) {
                         showOptionComment && (
                           <div className=' absolute w-72 bg-white rounded-md shadow-md shadow-slate-400 p-2 text-left' ref={ref}>
                             <p className=' font-semibold text-sm hover:bg-slate-300 cursor-pointer py-2 pl-2'>Edit</p>
-                            <p className=' font-semibold text-sm hover:bg-slate-300 cursor-pointer py-2 pl-2'>Delete</p>
+                            <p className=' font-semibold text-sm hover:bg-slate-300 cursor-pointer py-2 pl-2' onClick={() => props.deleteComment(props.comment.idComment!!)}>Delete</p>
                           </div>
                         )
                       }

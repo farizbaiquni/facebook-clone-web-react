@@ -57,26 +57,28 @@ function PostCard(props: propsType) {
       );
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
-        const tempComments: commentDisplayedType = {
-          idComment : doc.id, 
-          idUser : doc.data().idUser,
-          idPost : doc.data().idPost,
-          text : doc.data().text,
-          attachments: doc.data().attachments,
-          attachmentType : doc.data().attachmentType,
-          createdAt : doc.data().createdAt,
-          reactTotalReplay : doc.data().reactTotalReplay ?? 0,
-          reactTotalLike : doc.data().reactTotalLike ?? 0,
-          reactTotalLove : doc.data().reactTotalLove ?? 0,
-          reactTotalCare : doc.data().reactTotalCare ?? 0,
-          reactTotalHaha : doc.data().reactTotalHaha ?? 0,
-          reactTotalWow : doc.data().reactTotalWow ?? 0,
-          reactTotalSad : doc.data().reactTotalSad ?? 0,
-          reactTotalAngry : doc.data().reactTotalAngry ?? 0,
-          idCommentTemp: null,
+        if(doc.id != null) {
+          const tempComments: commentDisplayedType = {
+            idComment : doc.id, 
+            idUser : doc.data().idUser,
+            idPost : doc.data().idPost,
+            text : doc.data().text ?? '',
+            attachments: doc.data().attachments,
+            attachmentType : doc.data().attachmentType,
+            createdAt : doc.data().createdAt,
+            reactTotalReplay : doc.data().reactTotalReplay ?? 0,
+            reactTotalLike : doc.data().reactTotalLike ?? 0,
+            reactTotalLove : doc.data().reactTotalLove ?? 0,
+            reactTotalCare : doc.data().reactTotalCare ?? 0,
+            reactTotalHaha : doc.data().reactTotalHaha ?? 0,
+            reactTotalWow : doc.data().reactTotalWow ?? 0,
+            reactTotalSad : doc.data().reactTotalSad ?? 0,
+            reactTotalAngry : doc.data().reactTotalAngry ?? 0,
+            idCommentTemp: null,
+          }
+          setComments([tempComments])
+          setFirstFetchCommentDone(true)
         }
-        setComments([tempComments])
-        setFirstFetchCommentDone(true)
     })
   }
 
@@ -94,12 +96,29 @@ function PostCard(props: propsType) {
   }, [idNewComments])
 
 
-  const deleteComment = useCallback( async(idComment: string, deletedId: string) => {
-    console.log("=== DELETE COMMENT ===")
-    await deleteDoc(doc(db, "comments", idComment)).then(() => {
-      setNewComments(prevState => prevState.filter(comment => comment.idCommentTemp !== deletedId))
-    });
+  const deleteNewComment = useCallback( async(idComment: string, deletedId: string) => {
+   try {
+      console.log("=== DELETE COMMENT ===")
+      await deleteDoc(doc(db, "comments", idComment)).then(() => {
+        setNewComments(prevState => prevState.filter(comment => comment.idCommentTemp !== deletedId))
+      });
+   } catch (error) { }
   }, [newComments])
+
+  const deleteComment = useCallback( async(deletedIdComment: string) => {
+   try {
+      console.log("=== DELETE COMMENT ===")
+      await deleteDoc(doc(db, "comments", deletedIdComment)).then(() => {
+        setComments(prevState => prevState.filter(comment => comment.idComment !== deletedIdComment))
+      });
+   } catch (error) { }
+  }, [comments])
+
+  const updateTextNewComment = useCallback( async(text: string, editedId: string) => {
+    try {
+      setNewComments( prevState => prevState.map(el => (el.idCommentTemp === editedId ? { ...el, text } : el)) )
+    } catch (error) { }
+   }, [newComments])
 
 
   const handleRemoveLike = useCallback( async() => {
@@ -250,14 +269,15 @@ function PostCard(props: propsType) {
             username={user?.firstName + " " + user?.lastName}
             photoUrl={user?.photoProfile.toString()}
             idNewComments={idNewComments}
-            deleteComment={deleteComment}
+            deleteNewComment={deleteNewComment}
+            updateTextNewComment={updateTextNewComment}
           />
         ))
       }
     
       {
         comments.length > 0 && comments.map( comment => (
-          <Comment key={comment.idComment} comment={comment}/>
+          <Comment key={comment.idComment} comment={comment} deleteComment={deleteComment}/>
         ))
       }
 
