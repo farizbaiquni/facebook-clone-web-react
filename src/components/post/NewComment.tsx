@@ -2,6 +2,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { createRef, Fragment, useCallback, useEffect, useState } from 'react'
 import { idNewCommentsType, commentDisplayedType } from '../../constants/EntityType'
 import { db } from '../../lib/firebase'
+import ModalDeleteComment from './ModalDeleteComment'
 
 type propsType = {
   comment: commentDisplayedType,
@@ -20,6 +21,7 @@ export default function NewComment(props: propsType) {
     const [editText, setEditText] = useState<string>(props.comment.text)
     const [editCommentMode, setEditComentMode] = useState(false)
     const [showOptionComment, setShowOptionComment] = useState(false)
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const ref: React.RefObject<HTMLDivElement> = createRef();
 
 
@@ -31,6 +33,15 @@ export default function NewComment(props: propsType) {
         })
     }, [props.comment.idCommentTemp, props.idNewComments])
 
+
+    let onChageShowDeleteModal = useCallback((value: boolean) => {
+        setShowDeleteModal(value)
+    }, [showDeleteModal])
+
+    const onChageShowOptionComment = useCallback((value: boolean) => {
+        setShowOptionComment(value)
+    }, [showOptionComment])
+
     const handleEditComment = async(event: React.KeyboardEvent<HTMLInputElement>) => { 
         if(event.code === 'Enter') {
             if(editText.length > 0) {
@@ -40,10 +51,14 @@ export default function NewComment(props: propsType) {
                     }).then(() => props.updateTextNewComment(editText, props.comment.idCommentTemp!!));
                 }
             } else {
-                //Delete comment confirmation
+                setShowDeleteModal(true)
             }
         }
     }
+
+    useEffect(() => {
+        showDeleteModal ? document.body.style.overflow = 'hidden' : document.body.style.overflow = 'unset';
+     }, [showDeleteModal ]);
 
     useEffect(() => {
         setEditComentMode(false)
@@ -97,7 +112,7 @@ export default function NewComment(props: propsType) {
                                                     <p className=' font-semibold text-sm hover:bg-slate-300 cursor-pointer py-2 pl-2' onClick={() => setEditComentMode(prevState => !prevState)}>
                                                         Edit
                                                     </p>
-                                                    <p className=' font-semibold text-sm hover:bg-slate-300 cursor-pointer py-2 pl-2' onClick={() => props.comment.idCommentTemp && props.deleteNewComment(idCommentReal, props.comment.idCommentTemp)}>
+                                                    <p className=' font-semibold text-sm hover:bg-slate-300 cursor-pointer py-2 pl-2' onClick={() => setShowDeleteModal(true)}>
                                                         Delete
                                                     </p>
                                                 </div>
@@ -125,9 +140,9 @@ export default function NewComment(props: propsType) {
                                 className=' flex-1 focus:outline-none bg-gray-100 rounded-lg px-3'
                                 onKeyDown={handleEditComment}
                             />
-                            <p className=' text-sm text-slate-500 pt-1'>Press Esc to &nbsp;
+                            <p className=' text-xs text-slate-500 pt-1'>Press Esc to &nbsp;
                                 <span 
-                                    className=' text-sm text-blue-500 cursor-pointer' 
+                                    className=' text-sm text-blue-500 font-semibold cursor-pointer' 
                                     onClick={() => { setEditComentMode(false); setShowOptionComment(false) }}
                                 >
                                     cancel
@@ -136,8 +151,24 @@ export default function NewComment(props: propsType) {
                         </div>
                     )
                 }
-               
+
             </div>
+        
+            {
+                showDeleteModal && (
+                    <ModalDeleteComment 
+                        onChageShowDeleteModal = {onChageShowDeleteModal}
+                        onChageShowOptionComment = {onChageShowOptionComment}
+                        idCommentReal = {idCommentReal!}
+                        idCommentTemp = {props.comment.idCommentTemp!}
+                        deleteNewComment={props.deleteNewComment}
+                    />
+                   
+                )
+            }
+
+            
+
         
         </Fragment>      
     )
