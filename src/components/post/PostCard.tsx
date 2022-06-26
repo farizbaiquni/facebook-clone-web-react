@@ -1,6 +1,6 @@
 import { arrayRemove, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, limit, orderBy, query, runTransaction, Timestamp, where } from 'firebase/firestore'
 import { memo, useContext, useEffect, useState, useCallback } from 'react'
-import { idNewCommentsType, commentDisplayedType, postType, reactTypeOption } from '../../constants/EntityType'
+import { idNewCommentsType, commentDisplayedType, postType, reactTypeOption, newCommentDisplayedType } from '../../constants/EntityType'
 import { postType as postAccessType } from '../../constants/ModalPostInput'
 import { headerPostType } from '../../constants/PostComponentType'
 import { UserContext } from '../../contexts/UserContext'
@@ -33,7 +33,7 @@ function PostCard(props: propsType) {
   
   const [timeFirstRender, setTimeFirstRender] = useState(Timestamp.now())
   const [comments, setComments] = useState<commentDisplayedType[]>([])
-  const [newComments, setNewComments] = useState<commentDisplayedType[]>([])
+  const [newComments, setNewComments] = useState<newCommentDisplayedType[]>([])
   const [idNewComments, setIdNewComments] = useState<idNewCommentsType[]>([])
 
 
@@ -74,7 +74,6 @@ function PostCard(props: propsType) {
             reactTotalWow : doc.data().reactTotalWow ?? 0,
             reactTotalSad : doc.data().reactTotalSad ?? 0,
             reactTotalAngry : doc.data().reactTotalAngry ?? 0,
-            idCommentTemp: null,
           }
           setComments([tempComments])
           setFirstFetchCommentDone(true)
@@ -82,7 +81,7 @@ function PostCard(props: propsType) {
     })
   }
 
-  const addNewComment = useCallback((comment: commentDisplayedType) => {
+  const addNewComment = useCallback((comment: newCommentDisplayedType) => {
     setNewComments(prevstate => [comment, ...prevstate])
   }, [newComments])
 
@@ -98,19 +97,17 @@ function PostCard(props: propsType) {
 
   const deleteNewComment = useCallback( async(idComment: string, deletedId: string) => {
    try {
-      console.log("=== DELETE COMMENT ===")
-      await deleteDoc(doc(db, "comments", idComment)).then(() => {
-        setNewComments(prevState => prevState.filter(comment => comment.idCommentTemp !== deletedId))
-      });
-   } catch (error) { }
+      console.log("=== DELETE NEW COMMENT ===")
+      setNewComments(prevState => prevState.filter(comment => comment.idCommentTemp !== deletedId))
+      await deleteDoc(doc(db, "comments", idComment))
+   } catch (error) { alert(error) }
   }, [newComments])
 
   const deleteComment = useCallback( async(deletedIdComment: string) => {
    try {
       console.log("=== DELETE COMMENT ===")
-      await deleteDoc(doc(db, "comments", deletedIdComment)).then(() => {
-        setComments(prevState => prevState.filter(comment => comment.idComment !== deletedIdComment))
-      });
+      setComments(prevState => prevState.filter(comment => comment.idComment !== deletedIdComment))
+      await deleteDoc(doc(db, "comments", deletedIdComment))
    } catch (error) { }
   }, [comments])
 
@@ -118,8 +115,13 @@ function PostCard(props: propsType) {
     try {
       setNewComments( prevState => prevState.map(el => (el.idCommentTemp === editedId ? { ...el, text } : el)) )
     } catch (error) { }
-   }, [newComments])
+  }, [newComments])
 
+  const updateTextComment = useCallback( async(text: string, editedId: string) => {
+    try {
+      setComments( prevState => prevState.map(el => (el.idComment === editedId ? { ...el, text } : el)) )
+    } catch (error) { }
+  }, [comments])
 
   const handleRemoveLike = useCallback( async() => {
     console.log("HANDLE REMOVE LIKE")
@@ -277,7 +279,12 @@ function PostCard(props: propsType) {
     
       {
         comments.length > 0 && comments.map( comment => (
-          <Comment key={comment.idComment} comment={comment} deleteComment={deleteComment}/>
+          <Comment 
+            key={comment.idComment} 
+            comment={comment} 
+            deleteComment={deleteComment}
+            updateTextComment={updateTextComment}
+          />
         ))
       }
 

@@ -1,13 +1,13 @@
 import { setDoc, doc, Timestamp, collection, addDoc } from 'firebase/firestore';
 import { KeyboardEventHandler, useState } from 'react';
-import { commentAttachmentType, commentAttachmentTypeOption, commentType, commentDisplayedType } from '../../constants/EntityType';
+import { commentAttachmentType, commentAttachmentTypeOption, commentType, commentDisplayedType, newCommentDisplayedType } from '../../constants/EntityType';
 import { db } from '../../lib/firebase';
 import { v4 as uuidv4 } from 'uuid'
 
 type propsType = {
   userId: string,
   idPost: string,
-  addNewComment: (comment: commentDisplayedType) => void
+  addNewComment: (comment: newCommentDisplayedType) => void
   handleAddIdComments: (tempId: string, realId: string) => void
 }
 
@@ -15,8 +15,6 @@ export default function InputComment(props: propsType) {
 
   const [text, setText] = useState<string>("")
   const [attachmentType, setAttachmentType] = useState<commentAttachmentType>("text-only")
-  
-
 
   const handleAddComment = async(event: React.KeyboardEvent<HTMLInputElement>) => {
     if(event.code === 'Enter') {
@@ -39,7 +37,7 @@ export default function InputComment(props: propsType) {
         reactTotalAngry : 0,
       }
 
-      const tempCommentDisplayed: commentDisplayedType = {
+      const tempCommentDisplayed: newCommentDisplayedType = {
         idComment : null,
         idUser : props.userId,
         idPost : props.idPost,

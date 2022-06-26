@@ -1,11 +1,11 @@
 import { doc, updateDoc } from 'firebase/firestore'
 import { createRef, Fragment, useCallback, useEffect, useState } from 'react'
-import { idNewCommentsType, commentDisplayedType } from '../../constants/EntityType'
+import { idNewCommentsType, newCommentDisplayedType } from '../../constants/EntityType'
 import { db } from '../../lib/firebase'
-import ModalDeleteComment from './ModalDeleteComment'
+import ModalDeleteNewComment from './ModalDeleteNewComment'
 
 type propsType = {
-  comment: commentDisplayedType,
+  comment: newCommentDisplayedType,
   username: string,
   photoUrl: string | undefined,
   idNewComments: idNewCommentsType[],
@@ -38,9 +38,11 @@ export default function NewComment(props: propsType) {
         setShowDeleteModal(value)
     }, [showDeleteModal])
 
+
     const onChageShowOptionComment = useCallback((value: boolean) => {
         setShowOptionComment(value)
     }, [showOptionComment])
+
 
     const handleEditComment = async(event: React.KeyboardEvent<HTMLInputElement>) => { 
         if(event.code === 'Enter') {
@@ -48,7 +50,9 @@ export default function NewComment(props: propsType) {
                 if( editText !== props.comment.text && idCommentReal != null && props.comment.idCommentTemp != null) {
                     await updateDoc(doc(db, 'comments', idCommentReal), {
                         "text": editText,
-                    }).then(() => props.updateTextNewComment(editText, props.comment.idCommentTemp!!));
+                    }).then(() => {
+                        props.updateTextNewComment(editText, props.comment.idCommentTemp!!)
+                    });
                 }
             } else {
                 setShowDeleteModal(true)
@@ -56,9 +60,11 @@ export default function NewComment(props: propsType) {
         }
     }
 
+
     useEffect(() => {
         showDeleteModal ? document.body.style.overflow = 'hidden' : document.body.style.overflow = 'unset';
      }, [showDeleteModal ]);
+
 
     useEffect(() => {
         setEditComentMode(false)
@@ -119,8 +125,7 @@ export default function NewComment(props: propsType) {
                                                 )
                                             }
                                         </div>
-                                    )
-                                    
+                                    )     
                                 }
                                 
                             </div>
@@ -156,7 +161,7 @@ export default function NewComment(props: propsType) {
         
             {
                 showDeleteModal && (
-                    <ModalDeleteComment 
+                    <ModalDeleteNewComment 
                         onChageShowDeleteModal = {onChageShowDeleteModal}
                         onChageShowOptionComment = {onChageShowOptionComment}
                         idCommentReal = {idCommentReal!}

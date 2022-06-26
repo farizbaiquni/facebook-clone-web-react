@@ -3,11 +3,12 @@ import { Fragment } from "react";
 type propsType = {
     onChageShowDeleteModal: (value: boolean) => void,
     onChageShowOptionComment: (value: boolean) => void,
-    idComment: string,
-    deleteComment: (idComment: string) => void
+    idCommentTemp: string,
+    idCommentReal: string,
+    deleteNewComment: (idReal: string, idTemp: string) => void
 }
 
-export default function ModalDeleteComment(props: propsType) {
+export default function ModalDeleteNewComment(props: propsType) {
   return (
         <Fragment>
             <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
@@ -41,7 +42,7 @@ export default function ModalDeleteComment(props: propsType) {
                                 onClick={() => { 
                                     props.onChageShowOptionComment(false); 
                                     props.onChageShowDeleteModal(false); 
-                                    props.deleteComment(props.idComment) 
+                                    props.deleteNewComment(props.idCommentReal, props.idCommentTemp) 
                                 }}
                             >
                                 Delete
