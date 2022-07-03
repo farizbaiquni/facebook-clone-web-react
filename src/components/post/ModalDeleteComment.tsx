@@ -3,8 +3,7 @@ import { Fragment } from "react";
 type propsType = {
     onChageShowDeleteModal: (value: boolean) => void,
     onChageShowOptionComment: (value: boolean) => void,
-    idComment: string,
-    deleteComment: (idComment: string) => void
+    handleDeleteComment: () => void
 }
 
 export default function ModalDeleteComment(props: propsType) {
@@ -41,7 +40,7 @@ export default function ModalDeleteComment(props: propsType) {
                                 onClick={() => { 
                                     props.onChageShowOptionComment(false); 
                                     props.onChageShowDeleteModal(false); 
-                                    props.deleteComment(props.idComment) 
+                                    props.handleDeleteComment() 
                                 }}
                             >
                                 Delete

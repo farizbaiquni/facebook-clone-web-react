@@ -95,34 +95,6 @@ function PostCard(props: propsType) {
   }, [idNewComments])
 
 
-  const deleteNewComment = useCallback( async(idComment: string, deletedId: string) => {
-   try {
-      console.log("=== DELETE NEW COMMENT ===")
-      setNewComments(prevState => prevState.filter(comment => comment.idCommentTemp !== deletedId))
-      await deleteDoc(doc(db, "comments", idComment))
-   } catch (error) { alert(error) }
-  }, [newComments])
-
-  const deleteComment = useCallback( async(deletedIdComment: string) => {
-   try {
-      console.log("=== DELETE COMMENT ===")
-      setComments(prevState => prevState.filter(comment => comment.idComment !== deletedIdComment))
-      await deleteDoc(doc(db, "comments", deletedIdComment))
-   } catch (error) { }
-  }, [comments])
-
-  const updateTextNewComment = useCallback( async(text: string, editedId: string) => {
-    try {
-      setNewComments( prevState => prevState.map(el => (el.idCommentTemp === editedId ? { ...el, text } : el)) )
-    } catch (error) { }
-  }, [newComments])
-
-  const updateTextComment = useCallback( async(text: string, editedId: string) => {
-    try {
-      setComments( prevState => prevState.map(el => (el.idComment === editedId ? { ...el, text } : el)) )
-    } catch (error) { }
-  }, [comments])
-
   const handleRemoveLike = useCallback( async() => {
     console.log("HANDLE REMOVE LIKE")
     if(props.statusListeningPosts !== undefined && props.reactStatus === reactTypeOption.like){
@@ -271,8 +243,6 @@ function PostCard(props: propsType) {
             username={user?.firstName + " " + user?.lastName}
             photoUrl={user?.photoProfile.toString()}
             idNewComments={idNewComments}
-            deleteNewComment={deleteNewComment}
-            updateTextNewComment={updateTextNewComment}
           />
         ))
       }
@@ -282,8 +252,6 @@ function PostCard(props: propsType) {
           <Comment 
             key={comment.idComment} 
             comment={comment} 
-            deleteComment={deleteComment}
-            updateTextComment={updateTextComment}
           />
         ))
       }
