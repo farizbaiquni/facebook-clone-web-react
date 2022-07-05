@@ -1,6 +1,6 @@
 import { arrayRemove, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, limit, orderBy, query, runTransaction, Timestamp, where } from 'firebase/firestore'
 import { memo, useContext, useEffect, useState, useCallback } from 'react'
-import { idNewCommentsType, commentDisplayedType, postType, reactTypeOption, newCommentDisplayedType } from '../../constants/EntityType'
+import { idNewCommentType, commentDisplayedType, postType, reactTypeOption, newCommentDisplayedType } from '../../constants/EntityType'
 import { postType as postAccessType } from '../../constants/ModalPostInput'
 import { headerPostType } from '../../constants/PostComponentType'
 import { UserContext } from '../../contexts/UserContext'
@@ -34,8 +34,8 @@ function PostCard(props: propsType) {
   const [timeFirstRender, setTimeFirstRender] = useState(Timestamp.now())
   const [comments, setComments] = useState<commentDisplayedType[]>([])
   const [newComments, setNewComments] = useState<newCommentDisplayedType[]>([])
-  const [idNewComments, setIdNewComments] = useState<idNewCommentsType[]>([])
-
+  const [idNewComments, setIdNewComments] = useState<idNewCommentType[]>([])
+  const [errorNewComments, setErrorNewComments] = useState<string[]>([])
 
   let headerPost: headerPostType = {
     username: `${user?.firstName} ${user?.lastName}`,
@@ -85,15 +85,17 @@ function PostCard(props: propsType) {
     setNewComments(prevstate => [comment, ...prevstate])
   }, [newComments])
 
-
-  const handleAddIdComments = useCallback((tempId: string, realId: string) => {
-    const temp: idNewCommentsType = {
+  const handleAddIdNewComments = useCallback((tempId: string, realId: string) => {
+    const temp: idNewCommentType = {
       tempId: tempId,
       realId: realId,
     }
     setIdNewComments(prev => [...prev, temp])
   }, [idNewComments])
 
+  const handleAddErrorNewComments = useCallback((errorIdNewComment: string) => {
+    setErrorNewComments(prev => [...prev, errorIdNewComment])
+  }, [errorNewComments])
 
   const handleRemoveLike = useCallback( async() => {
     console.log("HANDLE REMOVE LIKE")
@@ -116,7 +118,6 @@ function PostCard(props: propsType) {
       } catch (error) { setLoadingProcessReact(false) }
     } 
   }, [props.statusListeningPosts, props.reactStatus])
-
 
   const handleAddLike = useCallback(async () => {
     console.log("HANDLE ADD LIKE")
@@ -188,8 +189,7 @@ function PostCard(props: propsType) {
     if(firstFetchCommentDone === false) {
       firstFetchComment()
     }
-
-  }, [comments, idNewComments, newComments])
+  }, [comments])
 
   return (
     <div className="post mb-10 bg-white w-600 p-5 rounded-md shadow-slate-400 shadow-sm border-0 border-gray-400">
@@ -232,7 +232,8 @@ function PostCard(props: propsType) {
         userId={props.userId} 
         idPost={props.post.idPost} 
         addNewComment={addNewComment}
-        handleAddIdComments={handleAddIdComments}
+        handleAddIdNewComments={handleAddIdNewComments}
+        handleAddErrorNewComments={handleAddErrorNewComments}
        />
 
       {
@@ -243,6 +244,7 @@ function PostCard(props: propsType) {
             username={user?.firstName + " " + user?.lastName}
             photoUrl={user?.photoProfile.toString()}
             idNewComments={idNewComments}
+            errorNewComments={errorNewComments}
           />
         ))
       }

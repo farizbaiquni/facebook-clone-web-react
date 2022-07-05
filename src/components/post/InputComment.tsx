@@ -8,7 +8,8 @@ type propsType = {
   userId: string,
   idPost: string,
   addNewComment: (comment: newCommentDisplayedType) => void
-  handleAddIdComments: (tempId: string, realId: string) => void
+  handleAddIdNewComments: (tempId: string, realId: string) => void
+  handleAddErrorNewComments: (errorIdNewComment: string) => void
 }
 
 export default function InputComment(props: propsType) {
@@ -38,7 +39,7 @@ export default function InputComment(props: propsType) {
       }
 
       const tempCommentDisplayed: newCommentDisplayedType = {
-        idComment : null,
+        idCommentTemp: uuid,
         idUser : props.userId,
         idPost : props.idPost,
         text : text,
@@ -53,14 +54,17 @@ export default function InputComment(props: propsType) {
         reactTotalWow : 0,
         reactTotalSad : 0,
         reactTotalAngry : 0,
-        idCommentTemp: uuid,
       }
 
       props.addNewComment(tempCommentDisplayed)
     
       setText('')
-      const docRef = await addDoc(collection(db, "comments"), tempComment)
-      props.handleAddIdComments(uuid, docRef.id)
+      const queryTimer = setTimeout(() => { props.handleAddErrorNewComments(uuid) }, 4300)
+      await addDoc(collection(db, "comments"), tempComment)
+      .then(doc => {
+        clearTimeout(queryTimer)
+        props.handleAddIdNewComments(uuid, doc.id)
+      })
       
     }
   }

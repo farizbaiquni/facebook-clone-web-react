@@ -1,6 +1,6 @@
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { createRef, Fragment, useCallback, useEffect, useState } from 'react'
-import { idNewCommentsType, newCommentDisplayedType } from '../../constants/EntityType'
+import { idNewCommentType, newCommentDisplayedType } from '../../constants/EntityType'
 import { db } from '../../lib/firebase'
 import ModalDeleteNewComment from './ModalDeleteNewComment'
 
@@ -8,7 +8,8 @@ type propsType = {
   comment: newCommentDisplayedType,
   username: string,
   photoUrl: string | undefined,
-  idNewComments: idNewCommentsType[]
+  idNewComments: idNewCommentType[]
+  errorNewComments: string[]
 }
 
 export default function NewComment(props: propsType) {
@@ -25,16 +26,32 @@ export default function NewComment(props: propsType) {
     const [queryError, setQueryError] = useState(false)
     const [hiddenComment, setHiddenComment] = useState(false)
     const [errorDelete, setErrorDelete] = useState(false)
+    const [createError, setCreateError] = useState<boolean>(false)
     const ref: React.RefObject<HTMLDivElement> = createRef();
 
 
     const checkIsSyncInDB = useCallback(() => {
-        props.idNewComments.map(id => {
-            if(id.tempId === props.comment.idCommentTemp) {
-                setIdCommentReal(id.realId)
+        for (let i = 0; i < props.idNewComments.length; i++) {
+            if(props.idNewComments[i].tempId === props.comment.idCommentTemp) {
+                setIdCommentReal(props.idNewComments[i].realId)
+                break
             }
-        })
+        }
+        // props.idNewComments.map(id => {
+        //     if(id.tempId === props.comment.idCommentTemp) {
+        //         setIdCommentReal(id.realId)
+        //     }
+        // })
     }, [props.comment.idCommentTemp, props.idNewComments])
+
+    const checkIfError = () => {
+        for (let i = 0; i < props.errorNewComments.length; i++) {
+            if(props.errorNewComments[i] === props.comment.idCommentTemp) {
+                setCreateError(true)
+                break
+            }
+        }
+    }
 
 
     let onChageShowDeleteModal = useCallback((value: boolean) => {
@@ -93,17 +110,12 @@ export default function NewComment(props: propsType) {
         } catch (error) { }
       }
     
-
-
     useEffect(() => {
         showDeleteModal ? document.body.style.overflow = 'hidden' : document.body.style.overflow = 'unset';
      }, [showDeleteModal ]);
 
 
     useEffect(() => {
-        if(props.idNewComments != null && props.idNewComments.length > 0 && idCommentReal == null) {
-            checkIsSyncInDB()
-        }
         const handleClickOutside = (event: MouseEvent) => {
             if (ref && ref !== null) {
             const cur = ref.current;
@@ -117,7 +129,21 @@ export default function NewComment(props: propsType) {
             document.removeEventListener("click", handleClickOutside);
         };
 
-    }, [checkIsSyncInDB, idCommentReal, props.idNewComments, ref, props.comment.text])
+    }, [ref])
+
+
+    useEffect(() => {
+        if(props.idNewComments.length > 0 && idCommentReal == null) {
+            checkIsSyncInDB()
+        }
+    }, [props.idNewComments])
+
+
+    useEffect(() => {
+        if(idCommentReal == null && props.errorNewComments.length > 0) {
+            checkIfError()
+        }
+    }, [props.errorNewComments])
 
 
     return (
@@ -129,11 +155,11 @@ export default function NewComment(props: propsType) {
                             <span className=' relative top-0 left-0 bg-blue-500'>
                                 <img src={process.env.PUBLIC_URL + './profile.jpg'} alt="" className=' h-8 w-8 rounded-full mr-2' />
                                 {
-                                    queryError && (
+                                    ((idCommentReal === null && createError === true) || queryError) && (
                                         <span className=' bg-white rounded-full absolute top-1/3 right-0'>
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="red" className=" w-4 h-4 m-1" viewBox="0 0 16 16"> 
-                                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/> 
-                                        </svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="red" className=" w-4 h-4 m-1" viewBox="0 0 16 16"> 
+                                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/> 
+                                            </svg>
                                         </span>
                                     )
                                 }
@@ -160,7 +186,10 @@ export default function NewComment(props: propsType) {
                                                             <p className=' font-semibold text-sm hover:bg-slate-300 cursor-pointer py-2 pl-2' onClick={() => setEditComentMode(prevState => !prevState)}>
                                                                 Edit
                                                             </p>
-                                                            <p className=' font-semibold text-sm hover:bg-slate-300 cursor-pointer py-2 pl-2' onClick={() => setShowDeleteModal(true)}>
+                                                            <p className=' font-semibold text-sm hover:bg-slate-300 cursor-pointer py-2 pl-2' onClick={() => {
+                                                                setShowOptionComment(false);
+                                                                setShowDeleteModal(true)
+                                                            }}>
                                                                 Delete
                                                             </p>
                                                         </div>
@@ -173,7 +202,7 @@ export default function NewComment(props: propsType) {
                                     </div>
                                     <span className='flex mt-1 px-3'>
                                         {
-                                            (queryError === false && queryLoading === false) && (
+                                            (idCommentReal !== null && (queryError === false && queryLoading === false)) && (
                                                 <>
                                                     <p className=' text-xs font-bold text-gray-500 cursor-pointer hover:underline mr-4'>Like</p>
                                                     <p className=' text-xs font-bold text-gray-500 cursor-pointer hover:underline mr-4'>Reply</p>
@@ -182,22 +211,28 @@ export default function NewComment(props: propsType) {
                                             )
                                         }
                                         {
-                                            queryError === true && (
+                                            (idCommentReal === null && createError === true) ? (
+                                                <>
+                                                    <p className=' text-xs text-gray-500 hover:underline mr-1'>Unable to </p>
+                                                    <p className=' text-xs text-gray-500 mr-1'>post comment. </p>
+                                                    <p className=' text-xs cursor-pointer hover:underline text-blue-600'>Try again</p>
+                                                </>
+                                            ) : (queryError === true) && (
                                                 <Fragment>
-                                                <p className=' text-xs text-gray-500 hover:underline mr-1'>Unable to </p>
-                                                {
-                                                    (errorDelete === true) ? (
-                                                    <>
-                                                        <p className=' text-xs text-gray-500 mr-1'>delete comment. </p>
-                                                        <p className=' text-xs cursor-pointer hover:underline text-blue-600'>Try again</p>
-                                                    </>
-                                                    ) : (
-                                                    <>
-                                                        <p className=' text-xs text-gray-500 mr-1'>edit comment. </p>
-                                                        <p className=' text-xs cursor-pointer hover:underline text-blue-600'>Try again</p>
-                                                    </>
-                                                    )
-                                                }
+                                                    <p className=' text-xs text-gray-500 hover:underline mr-1'>Unable to </p>
+                                                    {
+                                                        (errorDelete === true) ? (
+                                                        <>
+                                                            <p className=' text-xs text-gray-500 mr-1'>delete comment. </p>
+                                                            <p className=' text-xs cursor-pointer hover:underline text-blue-600'>Try again</p>
+                                                        </>
+                                                        ) : (
+                                                        <>
+                                                            <p className=' text-xs text-gray-500 mr-1'>edit comment. </p>
+                                                            <p className=' text-xs cursor-pointer hover:underline text-blue-600'>Try again</p>
+                                                        </>
+                                                        )
+                                                    }
                                                 </Fragment>
                                             )
                                         }

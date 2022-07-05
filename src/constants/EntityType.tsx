@@ -84,7 +84,7 @@ export type commentType = {
 }
 
 export type newCommentDisplayedType = {
-    idComment: string | null,
+    idCommentTemp: string | null,
     idUser : string,
     idPost : string,
     text : string,
@@ -99,7 +99,6 @@ export type newCommentDisplayedType = {
     reactTotalWow : number,
     reactTotalSad : number,
     reactTotalAngry : number,
-    idCommentTemp: string | null,
 }
 
 export type commentDisplayedType = {
@@ -120,9 +119,9 @@ export type commentDisplayedType = {
     reactTotalAngry : number,
 }
 
-export type idNewCommentsType = {
+export type idNewCommentType = {
     tempId: string, 
     realId: string,
-  }
+}
   
 
