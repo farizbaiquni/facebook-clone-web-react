@@ -93,7 +93,7 @@ export default function SuggestedFriends() {
 
 
     return (
-        <div className=' overflow-x-auto overflow-y-hidden grid gap-1 grid-flow-col w-600'>
+        <div className=' overflow-x-auto overflow-y-hidden grid gap-1 grid-flow-col mb w-600'>
             {
                 suggestedFriends.map((value : suggestedUserType, index) => (
                     (authUser?.uid && value.userId) && <AddFriendCard key={value.userId} suggested={value} />

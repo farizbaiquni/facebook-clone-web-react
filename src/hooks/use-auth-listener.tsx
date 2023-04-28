@@ -6,7 +6,7 @@ export const useAuthListener = () => {
   const firebase = useContext(FirebaseContext);
   const auth = getAuth();
   const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("aa") || "{}")
+    JSON.parse(localStorage.getItem("userCredentialFbClone") || "{}")
   );
 
   useEffect(() => {

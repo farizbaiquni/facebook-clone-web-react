@@ -11,23 +11,22 @@ friends             : [ id_user ]
 
 
 
-USERS PROFILE   -> id -> idUser
-idUser: string
-username: string,
-photo_profile: string,
+USERS PROFILE       -> id -> idUser
+idUser              : string
+username            : string,
+photo_profile       : string,
 
 
 
-FRIEND_REQUESTS
+REQUESTS FRIENDS
 sender
 receiver
 date
 
 
 
-NOT SUGGESTED FRIENDS
-userId: String
-idList: String
+NOT SUGGESTED FRIENDS -> id -> idUser
+idNotSuggested      : Array<String>
 
 
 

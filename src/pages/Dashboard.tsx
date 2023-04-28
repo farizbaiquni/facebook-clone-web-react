@@ -19,8 +19,8 @@ export default function Dashboard() {
           <Stories />
           <span className=" m-auto flex w-post flex-col items-center">
             <PostInput />
-            {auth !== null && <Post />}
             <SuggestedFriends />
+            {auth !== null && <Post />}
           </span>
         </div>
         <RightSidebar />
