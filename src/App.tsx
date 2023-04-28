@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { userType } from "./constants/EntityType";
 import { AuthContext } from "./contexts/AuthContext";
@@ -13,7 +13,7 @@ import { db } from "./lib/firebase";
 import { User, getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 
-function App() {
+export default function App() {
   const auth = getAuth();
   const [authUser, setAuthUser] = useState<User | undefined | null>(undefined);
   const [userSnapshot, setUserSnapshot] = useState<userType | undefined | null>(
@@ -93,5 +93,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
