@@ -3,6 +3,7 @@ import {
   collection,
   doc,
   DocumentData,
+  Firestore,
   getDocs,
   getFirestore,
   query,
@@ -46,7 +47,7 @@ function PostInput() {
   const user = useContext(UserContext);
 
   const [modalIsOpen, setIsOpen] = React.useState(false);
-  const openModal = () => { 
+  const openModal = () => {
     setIsOpen(true);
     document.body.style.overflow = "hidden";
   };
@@ -56,12 +57,16 @@ function PostInput() {
   };
 
   const [friendsProfile, setFriendsProfile] = useState<Array<userProfileType>>([]);
-  const [indexFetchFriendsProfile, setIndexFetchFriendsProfile] =useState<number>(0);
+  const [indexFetchFriendsProfile, setIndexFetchFriendsProfile] = useState<number>(0);
   const [modalShowSpecific, setModalShowSpecific] = useState(modalShowOption.main);
-  const [lastVisibleFriends, setLastVisibleFriends] = useState<QueryDocumentSnapshot<DocumentData> | undefined | null>(null);
+  const [lastVisibleFriends, setLastVisibleFriends] = useState<
+    QueryDocumentSnapshot<DocumentData> | undefined | null
+  >(null);
   const [isFirstFetchFriendsDone, setIsFirstFetchFriendsDone] = useState<Boolean>(false);
 
-  const [modalScrollDivRef, setModalScrollDivRef] = useState<RefObject<HTMLInputElement>>(createRef());
+  const [modalScrollDivRef, setModalScrollDivRef] = useState<RefObject<HTMLInputElement>>(
+    createRef()
+  );
 
   const [accessFriendsState, setAccessFriendsState] = useState<Array<String>>([]);
   const [accessExceptionsState, setAccessExceptionsState] = useState<Array<String>>([]);
@@ -121,140 +126,76 @@ function PostInput() {
     }
   };
 
-  const firstFetchFriends = async () => {
-    let friends: Array<userProfileType> = [];
-    if (user != null && isFirstFetchFriendsDone === false) {
-      if (user?.friends.length !== undefined) {
-        if (user.friends.length >= 10) {
-          const first = query(
-            collection(db, "userProfile"),
-            where("idUser", "in", user.friends.slice(0, 11))
-          );
-          const documentSnapshots = await getDocs(first);
-          documentSnapshots.docs.forEach((item) => {
-            friends.push({
-              idUser: item.data().idUser,
-              photoUrl: item.data().photoUrl,
-              username: item.data().username,
-            });
-          });
-
-          const lastVisible =
-            documentSnapshots.docs[documentSnapshots.docs.length - 1];
-          setFriendsProfile(friends);
-          setLastVisibleFriends(lastVisible);
-
-          setIndexFetchFriendsProfile(10);
-          setIsFirstFetchFriendsDone(true);
-        } else if (user.friends.length < 10 && user.friends.length >= 1) {
-          const first = query(
-            collection(db, "userProfile"),
-            where("idUser", "in", user.friends.slice(0, user.friends.length))
-          );
-          const documentSnapshots = await getDocs(first);
-          documentSnapshots.docs.forEach((item) => {
-            friends.push({
-              idUser: item.data().idUser,
-              photoUrl: item.data().photoUrl,
-              username: item.data().username,
-            });
-            console.log(item);
-          });
-          console.log(user.friends.slice(0, user.friends.length));
-
-          const lastVisible =
-            documentSnapshots.docs[documentSnapshots.docs.length - 1];
-          setFriendsProfile(friends);
-          setLastVisibleFriends(lastVisible);
-          setIndexFetchFriendsProfile(user.friends.length - 1);
-          setIsFirstFetchFriendsDone(true);
-        } else {
-          setLastVisibleFriends(undefined);
-          setIsFirstFetchFriendsDone(true);
-        }
-
-        friends = [];
-      }
+  // Fungsi untuk mengambil friend profile pertama kali
+  const firstFetchFriendsProfile = async () => {
+    if (user === null || user === undefined || isFirstFetchFriendsDone === false) {
+      return;
     }
+
+    if (user.friends.length === 0) {
+      setLastVisibleFriends(undefined);
+      setIsFirstFetchFriendsDone(true);
+      return;
+    }
+
+    const maxFriends = Math.min(10, user.friends.length) + 1;
+    const friendList = user.friends.slice(0, maxFriends);
+    let newProfileFriends: Array<userProfileType> = await queryFriendsProfile(friendList, db);
+
+    setIndexFetchFriendsProfile(maxFriends);
+    setFriendsProfile(newProfileFriends);
+    setIsFirstFetchFriendsDone(true);
   };
 
-  const nextFetchFriends = async () => {
-    let friends: Array<userProfileType> = friendsProfile;
-    if (
-      user !== null &&
-      user !== undefined &&
-      lastVisibleFriends !== undefined
-    ) {
-      if (user.friends.length !== undefined) {
-        if (user.friends.length > indexFetchFriendsProfile - 1 + 5) {
-          const first = query(
-            collection(db, "userProfile"),
-            where(
-              "idUser",
-              "in",
-              user.friends.slice(
-                indexFetchFriendsProfile,
-                indexFetchFriendsProfile + 5
-              )
-            )
-          );
-          const documentSnapshots = await getDocs(first);
-          documentSnapshots.docs.forEach((item) => {
-            friends.push({
-              idUser: item.data().idUser,
-              photoUrl: item.data().photoUrl,
-              username: item.data().username,
-            });
-          });
-          setFriendsProfile(friends);
-        } else if (user.friends.length === indexFetchFriendsProfile - 1 + 5) {
-          const first = query(
-            collection(db, "userProfile"),
-            where(
-              "idUser",
-              "in",
-              user.friends.slice(indexFetchFriendsProfile, user.friends.length)
-            )
-          );
-          const documentSnapshots = await getDocs(first);
-          documentSnapshots.docs.forEach((item) => {
-            friends.push({
-              idUser: item.data().idUser,
-              photoUrl: item.data().photoUrl,
-              username: item.data().username,
-            });
-          });
-          setFriendsProfile(friends);
-          setLastVisibleFriends(undefined);
-        } else {
-          setLastVisibleFriends(undefined);
-        }
-      }
+  // Fungsi untuk mengambil friend profile selanjutnya
+  const nextFetchFriendsProfile = async () => {
+    if (user === null || user === undefined) {
+      return;
     }
-    friends = [];
+    const totalFriends = user.friends.length;
+    const maxFriendsFetch = Math.min(totalFriends, indexFetchFriendsProfile + 4) + 1;
+    const friendList = user!.friends.slice(indexFetchFriendsProfile, maxFriendsFetch);
+
+    let newProfileFriends: Array<userProfileType> = await queryFriendsProfile(friendList, db);
+    setFriendsProfile((prevState) => [...prevState, ...newProfileFriends]);
+    setIndexFetchFriendsProfile(maxFriendsFetch);
+  };
+
+  // Fungsi untuk mengambil data user profile di Firestore
+  const queryFriendsProfile = async (friendList: String[], db: Firestore) => {
+    let newProfileFriends: Array<userProfileType> = [];
+    const queryTask = query(collection(db, "userProfile"), where("idUser", "in", friendList));
+    const documentSnapshots = await getDocs(queryTask);
+    documentSnapshots.docs.forEach((item) => {
+      newProfileFriends.push({
+        idUser: item.data().idUser,
+        photoUrl: item.data().photoUrl,
+        username: item.data().username,
+      });
+    });
+    return newProfileFriends;
   };
 
   const scrollModal = () => {
     if (
       isFirstFetchFriendsDone &&
-      modalScrollDivRef.current?.scrollHeight! -
-        modalScrollDivRef.current?.scrollTop! ===
+      modalScrollDivRef.current?.scrollHeight! - modalScrollDivRef.current?.scrollTop! ===
         modalScrollDivRef.current?.clientHeight
     ) {
-      lastVisibleFriends !== undefined && nextFetchFriends();
+      lastVisibleFriends !== undefined && nextFetchFriendsProfile();
     }
   };
 
   return (
-    <div className="post-input w-600 bg-white rounded-md mt-10 mb-7 shadow shadow-gray-400">
-      <div className="top flex items-center py-3 ml-3">
+    <div className="post-input mt-10 mb-7 w-600 rounded-md bg-white shadow shadow-gray-400">
+      <div className="top ml-3 flex items-center py-3">
         <img
           src={process.env.PUBLIC_URL + "./profile.jpg"}
           alt="profile-post"
-          className=" rounded-full h-10 w-10"
+          className=" h-10 w-10 rounded-full"
         />
         <p
-          className=" ml-3 mr-3 cursor-pointer text-gray-600 text-lg w-full text-left bg-gray-100 rounded-xl py-1 px-3"
+          className=" ml-3 mr-3 w-full cursor-pointer rounded-xl bg-gray-100 py-1 px-3 text-left text-lg text-gray-600"
           onClick={openModal}
         >
           What's on your mind, fariz?
@@ -272,7 +213,7 @@ function PostInput() {
           </svg>
           <p className="ml-1 font-semibold text-gray-600">Live video</p>
         </span>
-        <span className=" flex items-center ml-5">
+        <span className=" ml-5 flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-8 w-8"
@@ -287,7 +228,7 @@ function PostInput() {
           </svg>
           <p className="ml-1 font-semibold text-gray-600">Photo/video</p>
         </span>
-        <span className=" flex items-center ml-5">
+        <span className=" ml-5 flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-8 w-8"
@@ -320,12 +261,12 @@ function PostInput() {
               case modalShowOption.main:
                 return (
                   <div className=" flex flex-col">
-                    <div className="flex w-full mb-5 justify-between items-center">
+                    <div className="mb-5 flex w-full items-center justify-between">
                       <p></p>
-                      <p className=" font-bold text-xl">Create Post</p>
+                      <p className=" text-xl font-bold">Create Post</p>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-9 w-9 p-1 rounded-full cursor-pointer hover:bg-slate-300"
+                        className="h-9 w-9 cursor-pointer rounded-full p-1 hover:bg-slate-300"
                         viewBox="0 0 20 20"
                         fill="gray"
                         onClick={closeModal}
@@ -341,21 +282,17 @@ function PostInput() {
                       <img
                         src={process.env.PUBLIC_URL + "./profile.jpg"}
                         alt="profile"
-                        className="h-10 w-10 rounded-full cursor-pointer"
+                        className="h-10 w-10 cursor-pointer rounded-full"
                       />
                       <span className="ml-3">
-                        <p className=" font-semibold">
-                          {authUser?.displayName}
-                        </p>
+                        <p className=" font-semibold">{authUser?.displayName}</p>
                         <span
-                          className="flex items-center cursor-pointer bg-slate-200 rounded p-1"
-                          onClick={() =>
-                            setModalShowSpecific(modalShowOption.access)
-                          }
+                          className="flex cursor-pointer items-center rounded bg-slate-200 p-1"
+                          onClick={() => setModalShowSpecific(modalShowOption.access)}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 mr-1"
+                            className="mr-1 h-5 w-5"
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >
@@ -365,10 +302,10 @@ function PostInput() {
                               clipRule="evenodd"
                             />
                           </svg>
-                          <p className=" font-semibold text-xs">{accessType}</p>
+                          <p className=" text-xs font-semibold">{accessType}</p>
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 ml1"
+                            className="ml1 h-5 w-5"
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >
@@ -388,16 +325,16 @@ function PostInput() {
                       cols={1}
                       rows={5}
                       placeholder="what's on your mind, baiquni"
-                      className=" text-2xl p-2 mt-5 border-none outline-none shadow-none resize-none"
+                      className=" mt-5 resize-none border-none p-2 text-2xl shadow-none outline-none"
                       onChange={(e) => setTextInput(e.target.value)}
                     ></textarea>
 
-                    <div className=" flex items-center border-2 border-gray-300 justify-between px-3 py-4 rounded-md">
+                    <div className=" flex items-center justify-between rounded-md border-2 border-gray-300 px-3 py-4">
                       <p className=" font-semibold">Add to your post</p>
                       <span className=" flex">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-7 w-7 mx-1 cursor-pointer"
+                          className="mx-1 h-7 w-7 cursor-pointer"
                           viewBox="0 0 20 20"
                           fill="#52b788"
                         >
@@ -410,7 +347,7 @@ function PostInput() {
 
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-7 w-7 mx-1 cursor-pointer"
+                          className="mx-1 h-7 w-7 cursor-pointer"
                           viewBox="0 0 20 20"
                           fill="#023e8a"
                         >
@@ -423,7 +360,7 @@ function PostInput() {
 
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-7 w-7 mx-1 cursor-pointer"
+                          className="mx-1 h-7 w-7 cursor-pointer"
                           viewBox="0 0 20 20"
                           fill="#ffb703"
                         >
@@ -436,7 +373,7 @@ function PostInput() {
 
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-7 w-7 mx-1 cursor-pointer"
+                          className="mx-1 h-7 w-7 cursor-pointer"
                           viewBox="0 0 20 20"
                           fill="#e56b6f"
                         >
@@ -449,7 +386,7 @@ function PostInput() {
 
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-7 w-7 mx-1 cursor-pointer"
+                          className="mx-1 h-7 w-7 cursor-pointer"
                           viewBox="0 0 20 20"
                           fill="#c9184a"
                         >
@@ -462,7 +399,7 @@ function PostInput() {
 
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-7 w-7 p-1 cursor-pointer"
+                          className="h-7 w-7 cursor-pointer p-1"
                           viewBox="0 0 20 20"
                           fill="gray  "
                         >
@@ -492,70 +429,42 @@ function PostInput() {
               case modalShowOption.access:
                 return (
                   <ModalAccessOption
-                    setModalShowSpecific={(data: string) =>
-                      setModalShowSpecific(data)
-                    }
+                    setModalShowSpecific={(data: string) => setModalShowSpecific(data)}
                     setAccessType={(data: string) => setAccessType(data)}
                     accessType={accessType}
-                    idFriends={
-                      user?.friends !== undefined
-                        ? user.friends!!
-                        : ([] as String[])
-                    }
-                    setAccessAllowed={(data: Array<String>) =>
-                      setAccessAllowed(data)
-                    }
+                    idFriends={user?.friends !== undefined ? user.friends!! : ([] as String[])}
+                    setAccessAllowed={(data: Array<String>) => setAccessAllowed(data)}
                   />
                 );
 
               case modalShowOption.except:
-                isFirstFetchFriendsDone === false && firstFetchFriends();
+                isFirstFetchFriendsDone === false && firstFetchFriendsProfile();
                 return (
-                  <div
-                    className=""
-                    ref={modalScrollDivRef}
-                    onScroll={scrollModal}
-                  >
+                  <div className="" ref={modalScrollDivRef} onScroll={scrollModal}>
                     <ModalAccessExceptFriends
                       friendsProfile={friendsProfile}
-                      setAccessAllowed={(data: Array<String>) =>
-                        setAccessAllowed(data)
-                      }
-                      setModalShowSpecific={(data: string) =>
-                        setModalShowSpecific(data)
-                      }
+                      setAccessAllowed={(data: Array<String>) => setAccessAllowed(data)}
+                      setModalShowSpecific={(data: string) => setModalShowSpecific(data)}
                       accessExceptionsState={accessExceptionsState}
                       setAccessExceptionsState={(data: Array<String>) =>
                         setAccessExceptionsState(data)
                       }
                       setAccessType={(data: string) => setAccessType(data)}
-                      idFriends={
-                        user?.friends !== undefined ? user?.friends!! : []
-                      }
+                      idFriends={user?.friends !== undefined ? user?.friends!! : []}
                     />
                   </div>
                 );
 
               case modalShowOption.specific:
-                isFirstFetchFriendsDone === false && firstFetchFriends();
+                isFirstFetchFriendsDone === false && firstFetchFriendsProfile();
                 return (
-                  <div
-                    className=""
-                    ref={modalScrollDivRef}
-                    onScroll={scrollModal}
-                  >
+                  <div className="" ref={modalScrollDivRef} onScroll={scrollModal}>
                     <ModalAccessSpecificFriends
                       friendsProfile={friendsProfile}
-                      setAccessAllowed={(data: Array<String>) =>
-                        setAccessAllowed(data)
-                      }
-                      setModalShowSpecific={(data: string) =>
-                        setModalShowSpecific(data)
-                      }
+                      setAccessAllowed={(data: Array<String>) => setAccessAllowed(data)}
+                      setModalShowSpecific={(data: string) => setModalShowSpecific(data)}
                       accessFriendsState={accessFriendsState}
-                      setAccessFriendsState={(data: Array<String>) =>
-                        setAccessFriendsState(data)
-                      }
+                      setAccessFriendsState={(data: Array<String>) => setAccessFriendsState(data)}
                       setAccessType={(data: string) => setAccessType(data)}
                     />
                   </div>

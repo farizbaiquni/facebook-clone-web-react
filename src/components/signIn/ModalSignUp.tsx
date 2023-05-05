@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  updateProfile,
-} from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, getFirestore, Timestamp, writeBatch } from "firebase/firestore";
 import {
   InputSignUpEnum,
@@ -102,7 +98,10 @@ function ModalSignUp(props: PropsType) {
       name: firstName + " " + lastName,
     });
 
-    await batch.commit();
+    await batch.commit().then(() => {
+      alert("Create Account success , please login");
+      props.closeModal();
+    });
   };
 
   const onSubmitValidateInput = () => {
@@ -137,10 +136,7 @@ function ModalSignUp(props: PropsType) {
     return isValid;
   };
 
-  const onChangeValidateAndSetInput = (
-    value: string,
-    inputType: InputSignUpEnum
-  ) => {
+  const onChangeValidateAndSetInput = (value: string, inputType: InputSignUpEnum) => {
     switch (inputType) {
       case InputSignUpEnum.firstName:
         value.length > 0
@@ -155,9 +151,7 @@ function ModalSignUp(props: PropsType) {
         setLastName(value);
         break;
       case InputSignUpEnum.email:
-        value.length > 0
-          ? (invalidInputSignUp.email = false)
-          : (invalidInputSignUp.email = true);
+        value.length > 0 ? (invalidInputSignUp.email = false) : (invalidInputSignUp.email = true);
         setEmail(value);
         break;
       case InputSignUpEnum.password:
@@ -173,9 +167,7 @@ function ModalSignUp(props: PropsType) {
         setBirthDate(value);
         break;
       case InputSignUpEnum.gender:
-        value.length > 0
-          ? (invalidInputSignUp.gender = false)
-          : (invalidInputSignUp.gender = true);
+        value.length > 0 ? (invalidInputSignUp.gender = false) : (invalidInputSignUp.gender = true);
         setGender(value);
         break;
     }
@@ -214,19 +206,12 @@ function ModalSignUp(props: PropsType) {
               placeholder="First name"
               value={`${firstName}`}
               onChange={(event) =>
-                onChangeValidateAndSetInput(
-                  event.target.value,
-                  InputSignUpEnum.firstName
-                )
+                onChangeValidateAndSetInput(event.target.value, InputSignUpEnum.firstName)
               }
             />
-            <span
-              className={`${invalidInputSignUp.firstName ? "block" : "hidden"}`}
-            >
+            <span className={`${invalidInputSignUp.firstName ? "block" : "hidden"}`}>
               <InvalidInputIcon />
-              <p className="absolute left-2 -bottom-5 text-sm text-red-500">
-                What's your name?
-              </p>
+              <p className="absolute left-2 -bottom-5 text-sm text-red-500">What's your name?</p>
             </span>
           </div>
 
@@ -242,19 +227,12 @@ function ModalSignUp(props: PropsType) {
               placeholder="Surname"
               value={`${lastName}`}
               onChange={(event) =>
-                onChangeValidateAndSetInput(
-                  event.target.value,
-                  InputSignUpEnum.lastName
-                )
+                onChangeValidateAndSetInput(event.target.value, InputSignUpEnum.lastName)
               }
             />
-            <span
-              className={`${invalidInputSignUp.lastName ? "block" : "hidden"}`}
-            >
+            <span className={`${invalidInputSignUp.lastName ? "block" : "hidden"}`}>
               <InvalidInputIcon />
-              <p className="absolute left-2 -bottom-5 text-sm text-red-500">
-                What's your name?
-              </p>
+              <p className="absolute left-2 -bottom-5 text-sm text-red-500">What's your name?</p>
             </span>
           </div>
         </div>
@@ -271,17 +249,12 @@ function ModalSignUp(props: PropsType) {
             autoComplete="off"
             value={`${email}`}
             onChange={(event) =>
-              onChangeValidateAndSetInput(
-                event.target.value,
-                InputSignUpEnum.email
-              )
+              onChangeValidateAndSetInput(event.target.value, InputSignUpEnum.email)
             }
           />
           <span className={`${invalidInputSignUp.email ? "block" : "hidden"}`}>
             <InvalidInputIcon />
-            <p className="absolute left-2 -bottom-5 text-sm text-red-500">
-              Cannot be empty
-            </p>
+            <p className="absolute left-2 -bottom-5 text-sm text-red-500">Cannot be empty</p>
           </span>
         </div>
 
@@ -297,19 +270,12 @@ function ModalSignUp(props: PropsType) {
             placeholder="New password"
             value={`${password}`}
             onChange={(event) =>
-              onChangeValidateAndSetInput(
-                event.target.value,
-                InputSignUpEnum.password
-              )
+              onChangeValidateAndSetInput(event.target.value, InputSignUpEnum.password)
             }
           />
-          <span
-            className={`${invalidInputSignUp.password ? "block" : "hidden"}`}
-          >
+          <span className={`${invalidInputSignUp.password ? "block" : "hidden"}`}>
             <InvalidInputIcon />
-            <p className="absolute left-2 -bottom-5 text-sm text-red-500">
-              Cannot be empty
-            </p>
+            <p className="absolute left-2 -bottom-5 text-sm text-red-500">Cannot be empty</p>
           </span>
         </div>
 
@@ -325,19 +291,12 @@ function ModalSignUp(props: PropsType) {
             placeholder="Date of Birth"
             value={`${birthDate}`}
             onChange={(event) =>
-              onChangeValidateAndSetInput(
-                event.target.value,
-                InputSignUpEnum.birthDate
-              )
+              onChangeValidateAndSetInput(event.target.value, InputSignUpEnum.birthDate)
             }
           />
-          <span
-            className={`${invalidInputSignUp.birthDate ? "block" : "hidden"}`}
-          >
+          <span className={`${invalidInputSignUp.birthDate ? "block" : "hidden"}`}>
             <InvalidInputIcon />
-            <p className="absolute left-2 -bottom-5 text-sm text-red-500">
-              Cannot be empty
-            </p>
+            <p className="absolute left-2 -bottom-5 text-sm text-red-500">Cannot be empty</p>
           </span>
         </div>
 
@@ -349,9 +308,7 @@ function ModalSignUp(props: PropsType) {
               name="gender"
               value="male"
               className="h-5 w-5 text-red-600"
-              onClick={() =>
-                onChangeValidateAndSetInput("male", InputSignUpEnum.lastName)
-              }
+              onClick={() => onChangeValidateAndSetInput("male", InputSignUpEnum.gender)}
             />
             <span className="ml-2 text-gray-700">Male</span>
           </label>
@@ -362,24 +319,19 @@ function ModalSignUp(props: PropsType) {
               name="gender"
               value="female"
               className="h-5 w-5 text-red-600"
-              onClick={() =>
-                onChangeValidateAndSetInput("female", InputSignUpEnum.lastName)
-              }
+              onClick={() => onChangeValidateAndSetInput("female", InputSignUpEnum.gender)}
             />
             <span className="ml-2 text-gray-700">Female</span>
           </label>
           <span className={`${invalidInputSignUp.gender ? "block" : "hidden"}`}>
             <InvalidInputIcon />
-            <p className="absolute left-2 -bottom-5 text-sm text-red-500">
-              Cannot be empty
-            </p>
+            <p className="absolute left-2 -bottom-5 text-sm text-red-500">Cannot be empty</p>
           </span>
         </div>
 
         <p className=" mt-7 max-w-md break-words text-xs text-gray-600">
-          By clicking Sign Up, you agree to our Terms, Data Policy and Cookie
-          Policy. You may receive SMS notifications from us and can opt out at
-          any time{" "}
+          By clicking Sign Up, you agree to our Terms, Data Policy and Cookie Policy. You may
+          receive SMS notifications from us and can opt out at any time{" "}
         </p>
 
         <button

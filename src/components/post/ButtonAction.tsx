@@ -4,9 +4,6 @@ import { reactTypeOption } from "../../constants/EntityType";
 
 type propsType = {
   userId: string;
-  handleAddLike: () => void;
-  reactStatus: string | null;
-  handleRemoveLike: () => void;
   loadingProcessReact: boolean;
 };
 
@@ -15,29 +12,21 @@ export default function ButtonAction(props: propsType) {
     <div className=" flex justify-center border-y-2 border-gray-300 py-2">
       <span
         className=" flex w-full cursor-pointer justify-center"
-        onClick={
-          props.reactStatus === reactTypeOption.like
-            ? () => props.handleRemoveLike()
-            : () => props.handleAddLike()
-        }
+        // onClick={
+        //   props.reactStatus === reactTypeOption.like
+        //     ? () => props.handleRemoveLike()
+        //     : () => props.handleAddLike()
+        // }
       >
         {props.loadingProcessReact ? (
-          <img
-            src={process.env.PUBLIC_URL + "./loading_blue.gif"}
-            alt=""
-            className=" h-6 w-6"
-          />
+          <img src={process.env.PUBLIC_URL + "./loading_blue.gif"} alt="" className=" h-6 w-6" />
         ) : (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="mr-1 h-6 w-6"
-            fill={`${
-              props.reactStatus === reactTypeOption.like ? `#1778F2` : "white"
-            }`}
+            // fill={`${props.reactStatus === reactTypeOption.like ? `#1778F2` : "white"}`}
             viewBox="0 0 24 24"
-            stroke={`${
-              props.reactStatus === reactTypeOption.like ? `white` : "gray"
-            }`}
+            // stroke={`${props.reactStatus === reactTypeOption.like ? `white` : "gray"}`}
           >
             <path
               strokeLinecap="round"

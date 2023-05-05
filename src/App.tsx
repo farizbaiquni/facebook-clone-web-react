@@ -16,9 +16,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 export default function App() {
   const auth = getAuth();
   const [authUser, setAuthUser] = useState<User | undefined | null>(undefined);
-  const [userSnapshot, setUserSnapshot] = useState<userType | undefined | null>(
-    undefined
-  );
+  const [userSnapshot, setUserSnapshot] = useState<userType | undefined | null>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [firstRoute] = useState<null | String>(null);
 
@@ -49,6 +47,7 @@ export default function App() {
   useEffect(() => {
     const listener = onAuthStateChanged(auth, (user) => {
       if (user) {
+        setAuthUser(null);
         setAuthUser(user);
       } else {
         setAuthUser(null);
@@ -79,14 +78,7 @@ export default function App() {
             />
             <Route path="/signIn" element={<SignIn />} />
             <Route path="/addUserProfile" element={<AddUserProfile />} />
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute route={firstRoute}>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/home" element={<Dashboard />} />
           </Routes>
         </UserContext.Provider>
       </AuthContext.Provider>
