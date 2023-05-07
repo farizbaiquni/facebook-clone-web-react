@@ -22,7 +22,6 @@ export default function Comment(props: propsType) {
   const ref: React.RefObject<HTMLDivElement> = createRef();
 
   const fetchUserProfile = async () => {
-    console.log("ID USER = " + props.comment.idUser);
     const docRef = doc(db, "userProfile", props.comment.idUser);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
@@ -122,7 +121,7 @@ export default function Comment(props: propsType) {
 
   return (
     <Fragment>
-      {hiddenComment === false && userProfile != null && (
+      {userProfile != null && (
         <div className=" group mt-3 flex">
           <div>
             <span className=" relative top-0 left-0 bg-blue-500">
@@ -195,18 +194,23 @@ export default function Comment(props: propsType) {
               </div>
 
               <span className="mt-1 flex px-3">
-                {queryError === false && queryLoading === false && (
-                  <>
-                    <p className=" mr-4 cursor-pointer text-xs font-bold text-gray-500 hover:underline">
-                      Like
-                    </p>
-                    <p className=" mr-4 cursor-pointer text-xs font-bold text-gray-500 hover:underline">
-                      Reply
-                    </p>
-                    <p className=" cursor-pointer text-xs font-bold text-gray-500 hover:underline">
-                      See translation
-                    </p>
-                  </>
+                {props.comment.pending === true ? (
+                  <p className="text-left text-sm font-semibold text-gray-500">posting...</p>
+                ) : (
+                  queryError === false &&
+                  queryLoading === false && (
+                    <>
+                      <p className=" mr-4 cursor-pointer text-xs font-bold text-gray-500 hover:underline">
+                        Like
+                      </p>
+                      <p className=" mr-4 cursor-pointer text-xs font-bold text-gray-500 hover:underline">
+                        Reply
+                      </p>
+                      <p className=" cursor-pointer text-xs font-bold text-gray-500 hover:underline">
+                        See translation
+                      </p>
+                    </>
+                  )
                 )}
                 {queryError === true && (
                   <Fragment>

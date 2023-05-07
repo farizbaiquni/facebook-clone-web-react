@@ -80,6 +80,7 @@ export type commentType = {
   reactTotalWow: number;
   reactTotalSad: number;
   reactTotalAngry: number;
+  totalReplay: number;
 };
 
 export type commentDisplayType = {

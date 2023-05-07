@@ -8,6 +8,7 @@ type propsType = {
   userId: string;
   idPost: string;
   addNewComment: (id: string, comment: commentDisplayType) => void;
+  changePendingStatus: (key: string) => void;
 };
 
 export default function InputComment(props: propsType) {
@@ -30,6 +31,7 @@ export default function InputComment(props: propsType) {
       reactTotalWow: 0,
       reactTotalSad: 0,
       reactTotalAngry: 0,
+      totalReplay: 0,
     };
     return object;
   };
@@ -59,13 +61,14 @@ export default function InputComment(props: propsType) {
 
   const handleAddComment = async (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.code === "Enter") {
-      console.log("HANDLE ADD COMMENT");
       const commentsRef = collection(db, "comments", props.idPost, "commentList");
       const newCommentDisplayObject = createCommenDisplaytObject();
       const newCommentObject = createCommentObject();
       props.addNewComment(newCommentDisplayObject.id, newCommentDisplayObject);
       await addDoc(commentsRef, newCommentObject)
-        .then((doc) => {})
+        .then((doc) => {
+          props.changePendingStatus(newCommentDisplayObject.id);
+        })
         .catch((e) => console.log("error"));
     }
   };

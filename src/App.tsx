@@ -20,6 +20,13 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [firstRoute] = useState<null | String>(null);
 
+  const checkAuthUserExist = (_authUser: User | null | undefined): boolean => {
+    if (authUser !== null && authUser !== undefined) {
+      return true;
+    }
+    return false;
+  };
+
   useEffect(() => {
     if (authUser !== null && authUser !== undefined) {
       const userListener = onSnapshot(doc(db, "users", authUser.uid), (doc) => {
@@ -49,6 +56,7 @@ export default function App() {
       if (user) {
         setAuthUser(null);
         setAuthUser(user);
+        console.log("object");
       } else {
         setAuthUser(null);
         setUserSnapshot(null);
@@ -76,7 +84,18 @@ export default function App() {
                 )
               }
             />
-            <Route path="/signIn" element={<SignIn />} />
+            <Route
+              path="/signIn"
+              element={
+                isLoading ? (
+                  <Loading />
+                ) : checkAuthUserExist(authUser) ? (
+                  <Navigate to="/home" />
+                ) : (
+                  <SignIn />
+                )
+              }
+            />
             <Route path="/addUserProfile" element={<AddUserProfile />} />
             <Route path="/home" element={<Dashboard />} />
           </Routes>

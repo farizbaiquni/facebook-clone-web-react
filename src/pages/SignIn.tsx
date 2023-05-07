@@ -1,10 +1,12 @@
-import React, { useState, lazy, Suspense } from "react";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import React, { useState, lazy, Suspense, useContext } from "react";
+import { User, getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { AuthContext } from "../contexts/AuthContext";
 
 const ModalSignUp = lazy(() => import("../components/signIn/ModalSignUp"));
 
 export const SignIn = () => {
   const auth = getAuth();
+  const authUser = useContext(AuthContext);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -20,12 +22,7 @@ export const SignIn = () => {
         alert("login success");
       })
       .catch((error) => {
-        alert(
-          "Login error, error code = " +
-            error.code +
-            ", pesan error = " +
-            error.message
-        );
+        alert("Login error, error code = " + error.code + ", pesan error = " + error.message);
       });
   };
 
@@ -74,9 +71,7 @@ export const SignIn = () => {
             Log In
           </button>
 
-          <p className=" mt-3 cursor-pointer text-sm text-blue-600">
-            Forgotten password ?
-          </p>
+          <p className=" mt-3 cursor-pointer text-sm text-blue-600">Forgotten password ?</p>
 
           <button
             type="button"
@@ -87,8 +82,8 @@ export const SignIn = () => {
           </button>
         </form>
         <p className="mt-5 text-sm">
-          <span className=" cursor-pointer font-semibold">Create a Page</span>{" "}
-          for a celebrity, brand or business.
+          <span className=" cursor-pointer font-semibold">Create a Page</span> for a celebrity,
+          brand or business.
         </p>
       </div>
       <div>

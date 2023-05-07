@@ -168,6 +168,7 @@ function PostCard(props: propsType) {
         userId={props.userId}
         idPost={props.post.idPost}
         addNewComment={addNewComment}
+        changePendingStatus={changePendingStatus}
       />
 
       {comments.map((comment) => {
