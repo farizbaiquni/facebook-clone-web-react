@@ -11,7 +11,7 @@ import { AuthContext } from "../contexts/AuthContext";
 export default function Dashboard() {
   let auth = useContext(AuthContext);
   return (
-    <Fragment>
+    <div>
       <Navbar />
       <div className=" flex justify-between bg-gray-100 pt-5">
         <LeftSidebar />
@@ -25,6 +25,6 @@ export default function Dashboard() {
         </div>
         <RightSidebar />
       </div>
-    </Fragment>
+    </div>
   );
 }

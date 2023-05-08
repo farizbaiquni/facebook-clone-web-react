@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { createRef, useEffect, useState } from "react";
 import "./App.css";
 import { userType } from "./constants/EntityType";
 import { AuthContext } from "./contexts/AuthContext";
@@ -12,6 +12,7 @@ import ProtectedRoute from "./helpers/protectedRoute";
 import { db } from "./lib/firebase";
 import { User, getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
+import { BrowserRouter } from "react-router-dom";
 
 export default function App() {
   const auth = getAuth();
@@ -56,7 +57,6 @@ export default function App() {
       if (user) {
         setAuthUser(null);
         setAuthUser(user);
-        console.log("object");
       } else {
         setAuthUser(null);
         setUserSnapshot(null);
@@ -67,38 +67,52 @@ export default function App() {
     return () => listener();
   }, [auth]);
 
+  const ref: React.RefObject<HTMLDivElement> = createRef();
+
+  const handleScroll = (element: React.RefObject<HTMLDivElement>) => {
+    const bottom =
+      Math.abs(
+        element.current!.scrollHeight - element.current!.clientHeight - element.current!.scrollTop
+      ) < 1;
+    if (bottom) {
+      console.log("end scroll");
+    }
+  };
+
   return (
-    <div className="App w-full">
+    <div className="App w-full overflow-y-scroll" ref={ref} onScroll={() => console.log("hello")}>
       <AuthContext.Provider value={authUser}>
         <UserContext.Provider value={userSnapshot}>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                isLoading ? (
-                  <Loading />
-                ) : userSnapshot === null ? (
-                  <Navigate to="/signIn" replace />
-                ) : (
-                  <Navigate to="/home" replace />
-                )
-              }
-            />
-            <Route
-              path="/signIn"
-              element={
-                isLoading ? (
-                  <Loading />
-                ) : checkAuthUserExist(authUser) ? (
-                  <Navigate to="/home" />
-                ) : (
-                  <SignIn />
-                )
-              }
-            />
-            <Route path="/addUserProfile" element={<AddUserProfile />} />
-            <Route path="/home" element={<Dashboard />} />
-          </Routes>
+          <BrowserRouter>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  isLoading ? (
+                    <Loading />
+                  ) : userSnapshot === null ? (
+                    <Navigate to="/signIn" replace />
+                  ) : (
+                    <Navigate to="/home" replace />
+                  )
+                }
+              />
+              <Route
+                path="/signIn"
+                element={
+                  isLoading ? (
+                    <Loading />
+                  ) : checkAuthUserExist(authUser) ? (
+                    <Navigate to="/home" />
+                  ) : (
+                    <SignIn />
+                  )
+                }
+              />
+              <Route path="/addUserProfile" element={<AddUserProfile />} />
+              <Route path="/home" element={<Dashboard />} />
+            </Routes>
+          </BrowserRouter>
         </UserContext.Provider>
       </AuthContext.Provider>
     </div>

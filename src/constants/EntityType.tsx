@@ -67,7 +67,7 @@ export enum radioGenderOption {
 
 export type commentType = {
   idUser: string;
-  idPost: string;
+  replyCommentId: string | null;
   text: string;
   attachments: string[] | null;
   attachmentType: string;
@@ -80,13 +80,14 @@ export type commentType = {
   reactTotalWow: number;
   reactTotalSad: number;
   reactTotalAngry: number;
-  totalReplay: number;
+  totalReply: number;
 };
 
 export type commentDisplayType = {
   id: string;
-  idUser: string;
   idPost: string;
+  replyCommentId: string | null;
+  idUser: string;
   text: string;
   attachments: string[] | null;
   attachmentType: string;
@@ -99,5 +100,6 @@ export type commentDisplayType = {
   reactTotalWow: number;
   reactTotalSad: number;
   reactTotalAngry: number;
-  pending: boolean;
+  isPending: boolean;
+  totalReply: number;
 };

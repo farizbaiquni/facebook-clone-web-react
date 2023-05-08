@@ -8,9 +8,10 @@ import {
   orderBy,
   query,
   QueryDocumentSnapshot,
+  startAfter,
   where,
 } from "firebase/firestore";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { createRef, useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import { postType, reactTypeOption } from "../../constants/EntityType";
 import PostCard from "./PostCard";
@@ -27,53 +28,9 @@ export default function Post() {
   >(null);
   const [reactPosts, setReactPosts] = useState<reactPostsType | null | undefined>(null);
   const [isFirstFetchPostsDone, setIsFirstFetchPostsDone] = useState(false);
+  const [errorFetch, setErrorFetch] = useState(false);
+  const [fetchOnProgress, setFetchOnProgress] = useState(false);
   const tempUid = "XWbtx7l5njceLoy5XHrS7ESwTRU2";
-
-  const queryReactPost = async () => {
-    try {
-      const docRef = doc(db, "userReactPosts", tempUid);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        try {
-          const tempObj = {
-            like: docSnap.data().like,
-            love: docSnap.data().love,
-            care: docSnap.data().care,
-            haha: docSnap.data().haha,
-            wow: docSnap.data().wow,
-            sad: docSnap.data().sad,
-            angry: docSnap.data().angry,
-          };
-          setReactPosts(tempObj);
-        } catch (error) {}
-      } else {
-        setReactPosts(undefined);
-      }
-      isFirstFetchPostsDone === false && firstQueryPosts();
-    } catch (error) {}
-  };
-
-  // FIRST QUERY POSTS
-  const firstQueryPosts = async () => {
-    try {
-      const arrOfId: Array<string> = [];
-      const queryTask = query(
-        collection(db, "searchPosts"),
-        where("accessAllowed", "array-contains-any", [tempUid]),
-        orderBy("createdAt", "desc"),
-        limit(5)
-      );
-      const documentSnapshots = await getDocs(queryTask);
-      documentSnapshots.forEach((post) => {
-        arrOfId.push(post.id);
-      });
-      getDataPosts(arrOfId);
-      setLastVisible(documentSnapshots.docs[documentSnapshots.docs.length - 1]);
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   const createPostObject = (post: QueryDocumentSnapshot<DocumentData>): postType => {
     let tempPost = {
@@ -110,26 +67,122 @@ export default function Post() {
     return tempPost;
   };
 
+  const queryReactPost = async () => {
+    try {
+      setErrorFetch(false);
+      setFetchOnProgress(true);
+      const docRef = doc(db, "userReactPosts", tempUid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const tempObj = {
+          like: docSnap.data().like,
+          love: docSnap.data().love,
+          care: docSnap.data().care,
+          haha: docSnap.data().haha,
+          wow: docSnap.data().wow,
+          sad: docSnap.data().sad,
+          angry: docSnap.data().angry,
+        };
+        setReactPosts(tempObj);
+      } else {
+        setReactPosts(undefined);
+      }
+      isFirstFetchPostsDone === false && firstQueryPosts();
+    } catch (error) {
+      setErrorFetch(true);
+      setFetchOnProgress(false);
+    }
+  };
+
+  // FIRST QUERY POSTS
+  const firstQueryPosts = async () => {
+    try {
+      setErrorFetch(false);
+      setFetchOnProgress(true);
+      const arrOfId: Array<string> = [];
+      const queryTask = query(
+        collection(db, "searchPosts"),
+        where("accessAllowed", "array-contains-any", [tempUid]),
+        orderBy("createdAt", "desc"),
+        limit(1)
+      );
+      const documentSnapshots = await getDocs(queryTask);
+      documentSnapshots.forEach((post) => {
+        arrOfId.push(post.id);
+      });
+      getDataPosts(arrOfId);
+      setLastVisible(documentSnapshots.docs[documentSnapshots.docs.length - 1]);
+    } catch (error) {
+      setErrorFetch(true);
+      setFetchOnProgress(false);
+    }
+  };
+
+  // NEXT QUERY POSTS
+  const nextQueryPosts = async () => {
+    try {
+      setErrorFetch(false);
+      setFetchOnProgress(true);
+      const arrOfId: Array<string> = [];
+      const queryTask = query(
+        collection(db, "searchPosts"),
+        where("accessAllowed", "array-contains-any", [tempUid]),
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisible),
+        limit(1)
+      );
+      const documentSnapshots = await getDocs(queryTask);
+      documentSnapshots.forEach((post) => {
+        arrOfId.push(post.id);
+      });
+      getDataPosts(arrOfId);
+      setLastVisible(documentSnapshots.docs[documentSnapshots.docs.length - 1]);
+      setFetchOnProgress(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   //GET POSTS DATA
   const getDataPosts = async (idPostsArr: Array<string>) => {
     try {
+      setErrorFetch(false);
+      setFetchOnProgress(true);
       const queryPosts = query(
         collection(db, "posts"),
         where("idPost", "in", idPostsArr),
         orderBy("createdAt", "desc")
       );
       const documentSnapshots = await getDocs(queryPosts);
-      const tempPosts = new Set(posts);
+      const tempPosts: Array<postType> = [];
       documentSnapshots.forEach((post) => {
         const tempPost = createPostObject(post);
-        tempPosts.add(tempPost);
+        tempPosts.push(tempPost);
       });
-      setPosts(Array.from(tempPosts));
+      setPosts((prevState) => [...prevState, ...tempPosts]);
       isFirstFetchPostsDone === false && setIsFirstFetchPostsDone(true);
+      setFetchOnProgress(false);
     } catch (error) {
-      console.log(error);
+      setErrorFetch(true);
+      setFetchOnProgress(false);
     }
   };
+
+  const checkEndScroll = useCallback(() => {
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop || 0;
+    if (scrollTop >= documentHeight - windowHeight) {
+      !fetchOnProgress && isFirstFetchPostsDone && nextQueryPosts();
+    }
+  }, [fetchOnProgress, isFirstFetchPostsDone]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", checkEndScroll);
+    return () => {
+      window.removeEventListener("scroll", checkEndScroll);
+    };
+  }, [checkEndScroll]);
 
   useEffect(() => {
     if (auth !== null && auth !== undefined) {

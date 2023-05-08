@@ -9,9 +9,9 @@ type propsType = {
 
 export default function ButtonAction(props: propsType) {
   return (
-    <div className=" flex justify-center border-y-2 border-gray-300 py-2">
+    <div className="flex justify-center border-y-2 border-gray-300 py-3">
       <span
-        className=" flex w-full cursor-pointer justify-center"
+        className="flex h-full w-full cursor-pointer justify-center hover:bg-slate-500"
         // onClick={
         //   props.reactStatus === reactTypeOption.like
         //     ? () => props.handleRemoveLike()
@@ -19,7 +19,7 @@ export default function ButtonAction(props: propsType) {
         // }
       >
         {props.loadingProcessReact ? (
-          <img src={process.env.PUBLIC_URL + "./loading_blue.gif"} alt="" className=" h-6 w-6" />
+          <img src={process.env.PUBLIC_URL + "./loading_blue.gif"} alt="" className="h-6 w-6" />
         ) : (
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -37,10 +37,10 @@ export default function ButtonAction(props: propsType) {
           </svg>
         )}
 
-        <p className=" font-semibold text-gray-500">Like</p>
+        <p className="font-semibold text-gray-500">Like</p>
       </span>
 
-      <span className=" flex w-full cursor-pointer justify-center">
+      <span className="flex w-full cursor-pointer justify-center">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="mr-1 h-6 w-6"
@@ -54,10 +54,10 @@ export default function ButtonAction(props: propsType) {
             clipRule="evenodd"
           />
         </svg>
-        <p className=" font-semibold text-gray-500">Comment</p>
+        <p className="font-semibold text-gray-500">Comment</p>
       </span>
 
-      <span className=" flex w-full cursor-pointer justify-center">
+      <span className="flex w-full cursor-pointer justify-center">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="mr-1 h-6 w-6"
@@ -67,7 +67,7 @@ export default function ButtonAction(props: propsType) {
         >
           <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
         </svg>
-        <p className=" font-semibold text-gray-500">Share</p>
+        <p className="font-semibold text-gray-500">Share</p>
       </span>
     </div>
   );

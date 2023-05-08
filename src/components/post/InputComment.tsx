@@ -1,24 +1,24 @@
-import { setDoc, doc, Timestamp, collection, addDoc } from "firebase/firestore";
-import { KeyboardEventHandler, useState } from "react";
+import { Timestamp, collection, addDoc } from "firebase/firestore";
 import { commentAttachmentType, commentDisplayType, commentType } from "../../constants/EntityType";
 import { db } from "../../lib/firebase";
 import { v4 as uuidv4 } from "uuid";
+import { memo, useState } from "react";
 
 type propsType = {
   userId: string;
   idPost: string;
   addNewComment: (id: string, comment: commentDisplayType) => void;
-  changePendingStatus: (key: string) => void;
+  changePendingStatus: (key: string, isPending: boolean) => void;
 };
 
-export default function InputComment(props: propsType) {
+function InputComment(props: propsType) {
   const [text, setText] = useState<string>("");
-  const [attachmentType, setAttachmentType] = useState<commentAttachmentType>("text-only");
+  const [attachmentType] = useState<commentAttachmentType>("text-only");
 
   const createCommentObject = (): commentType => {
     const object: commentType = {
       idUser: props.userId,
-      idPost: props.idPost,
+      replyCommentId: null,
       text: text,
       attachments: [],
       attachmentType: attachmentType,
@@ -31,7 +31,7 @@ export default function InputComment(props: propsType) {
       reactTotalWow: 0,
       reactTotalSad: 0,
       reactTotalAngry: 0,
-      totalReplay: 0,
+      totalReply: 0,
     };
     return object;
   };
@@ -40,8 +40,9 @@ export default function InputComment(props: propsType) {
     const uuid = uuidv4();
     const object: commentDisplayType = {
       id: uuid,
-      idUser: props.userId,
       idPost: props.idPost,
+      replyCommentId: null,
+      idUser: props.userId,
       text: text,
       attachments: [],
       attachmentType: attachmentType,
@@ -54,20 +55,22 @@ export default function InputComment(props: propsType) {
       reactTotalWow: 0,
       reactTotalSad: 0,
       reactTotalAngry: 0,
-      pending: true,
+      isPending: true,
+      totalReply: 0,
     };
     return object;
   };
 
   const handleAddComment = async (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.code === "Enter") {
-      const commentsRef = collection(db, "comments", props.idPost, "commentList");
+      setText("");
+      const commentsRef = collection(db, "comments", props.idPost, "comment");
       const newCommentDisplayObject = createCommenDisplaytObject();
       const newCommentObject = createCommentObject();
       props.addNewComment(newCommentDisplayObject.id, newCommentDisplayObject);
       await addDoc(commentsRef, newCommentObject)
         .then((doc) => {
-          props.changePendingStatus(newCommentDisplayObject.id);
+          props.changePendingStatus(newCommentDisplayObject.id, false);
         })
         .catch((e) => console.log("error"));
     }
@@ -91,3 +94,5 @@ export default function InputComment(props: propsType) {
     </div>
   );
 }
+
+export default memo(InputComment);
