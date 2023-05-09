@@ -38,17 +38,7 @@ export type postType = {
   reactTotalWow: number;
   reactTotalSad: number;
   reactTotalAngry: number;
-};
-
-export type reactType = "like" | "love" | "care" | "haha" | "wow" | "sad" | "angry";
-export const reactTypeOption = {
-  like: "like",
-  love: "love",
-  care: "care",
-  haha: "haha",
-  wow: "wow",
-  sad: "sad",
-  angry: "angry",
+  reactTotal: number;
 };
 
 export type commentAttachmentType = "text-only" | "photo" | "video" | "gif" | "sticker";
@@ -72,7 +62,7 @@ export type commentType = {
   attachments: string[] | null;
   attachmentType: string;
   createdAt: Timestamp;
-  reactTotalReplay: number;
+  reactTotalReply: number;
   reactTotalLike: number;
   reactTotalLove: number;
   reactTotalCare: number;
@@ -92,7 +82,7 @@ export type commentDisplayType = {
   attachments: string[] | null;
   attachmentType: string;
   createdAt: Timestamp;
-  reactTotalReplay: number;
+  reactTotalReply: number;
   reactTotalLike: number;
   reactTotalLove: number;
   reactTotalCare: number;
@@ -100,6 +90,34 @@ export type commentDisplayType = {
   reactTotalWow: number;
   reactTotalSad: number;
   reactTotalAngry: number;
+  totalReact: number;
   isPending: boolean;
   totalReply: number;
+};
+
+export type userReactPostType = {
+  usersReactType: Map<string, number>;
+};
+
+export enum reactEnum {
+  LIKE,
+  LOVE,
+  CARE,
+  HAHA,
+  WOW,
+  SAD,
+  ANGRY,
+}
+
+export type totalReactPostType = {
+  totalComment: number;
+  totalShare: number;
+  totalLike: number;
+  totalLove: number;
+  totalCare: number;
+  totalHaha: number;
+  totalWow: number;
+  totalSad: number;
+  totalAngry: number;
+  totalReact: number;
 };

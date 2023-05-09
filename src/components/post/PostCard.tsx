@@ -8,12 +8,11 @@ import {
   DocumentData,
 } from "firebase/firestore";
 import { memo, useContext, useEffect, useState, useCallback } from "react";
-import { postType, commentDisplayType } from "../../constants/EntityType";
+import { postType, commentDisplayType, totalReactPostType } from "../../constants/EntityType";
 import { postType as postAccessType } from "../../constants/ModalPostInput";
-import { headerPostType, reactPostsType } from "../../constants/PostComponentType";
+import { headerPostType } from "../../constants/PostComponentType";
 import { UserContext } from "../../contexts/UserContext";
 import { db } from "../../lib/firebase";
-import ButtonAction from "./ButtonAction";
 import Comment from "./Comment";
 import ContentPost from "./ContentPost";
 import HeaderPost from "./HeaderPost";
@@ -24,18 +23,17 @@ import TextStatusPost from "./TextStatusPost";
 type propsType = {
   post: postType;
   userId: string;
-  reactPosts: reactPostsType | null | undefined;
 };
 
 function PostCard(props: propsType) {
   console.log("====== RE-RENDER CARD POST - " + props.post.textPost + " ======");
 
   const userSnapshot = useContext(UserContext);
-  const [loadingProcessReact, setLoadingProcessReact] = useState<boolean>(false);
-  const [firstFetchCommentDone, setFirstFetchCommentDone] = useState(false);
   const [idNewComments, setIdNewComments] = useState<Array<string>>([]);
   const [helpTrigger, setHelpTrigger] = useState(false);
 
+  const [totalReactPost, setTotalReactPost] = useState<totalReactPostType | null>(null);
+  const [isfirstFetchCommentDone, setIsFirstFetchCommentDone] = useState(false);
   const [comments, setComments] = useState<Array<commentDisplayType>>([]);
 
   let headerPost: headerPostType = {
@@ -44,18 +42,9 @@ function PostCard(props: propsType) {
     accessType: props.post.accessType,
   };
 
-  let totalReact =
-    props.post.reactTotalAngry +
-    props.post.reactTotalCare +
-    props.post.reactTotalHaha +
-    props.post.reactTotalLike +
-    props.post.reactTotalLove +
-    props.post.reactTotalSad +
-    props.post.reactTotalWow;
-
-  const createCommentObject = useCallback(
+  const createCommentDisplayObject = useCallback(
     (comment: QueryDocumentSnapshot<DocumentData>): commentDisplayType => {
-      const commentObject: commentDisplayType = {
+      const commentDisplayObject: commentDisplayType = {
         id: comment.id,
         idPost: props.post.idPost,
         idUser: comment.data().idUser,
@@ -64,7 +53,7 @@ function PostCard(props: propsType) {
         attachments: comment.data().attachments,
         attachmentType: comment.data().attachmentType,
         createdAt: comment.data().createdAt,
-        reactTotalReplay: comment.data().reactTotalReplay ?? 0,
+        reactTotalReply: comment.data().reactTotalReplay ?? 0,
         reactTotalLike: comment.data().reactTotalLike ?? 0,
         reactTotalLove: comment.data().reactTotalLove ?? 0,
         reactTotalCare: comment.data().reactTotalCare ?? 0,
@@ -72,55 +61,89 @@ function PostCard(props: propsType) {
         reactTotalWow: comment.data().reactTotalWow ?? 0,
         reactTotalSad: comment.data().reactTotalSad ?? 0,
         reactTotalAngry: comment.data().reactTotalAngry ?? 0,
+        totalReact:
+          (comment.data().reactTotalLike ?? 0) +
+          (comment.data().reactTotalLove ?? 0) +
+          (comment.data().reactTotalCare ?? 0) +
+          (comment.data().reactTotalHaha ?? 0) +
+          (comment.data().reactTotalWow ?? 0) +
+          (comment.data().reactTotalSad ?? 0) +
+          (comment.data().reactTotalAngry ?? 0),
         isPending: false,
         totalReply: comment.data().totalReply,
       };
-      return commentObject;
+      return commentDisplayObject;
     },
     [props.post.idPost]
   );
 
+  const handleTotalReactPost = useCallback(() => {
+    const tempObject = {
+      totalComment: props.post.commentTotal,
+      totalShare: props.post.shareTotal,
+      totalLike: props.post.reactTotalLike,
+      totalLove: props.post.reactTotalLove,
+      totalCare: props.post.reactTotalCare,
+      totalHaha: props.post.reactTotalHaha,
+      totalWow: props.post.reactTotalWow,
+      totalSad: props.post.reactTotalSad,
+      totalAngry: props.post.reactTotalAngry,
+      totalReact: props.post.reactTotal,
+    };
+    setTotalReactPost(tempObject);
+  }, [props.post]);
+
   const firstFetchComment = useCallback(async () => {
-    const queryTask = query(
-      collection(db, "comments", props.post.idPost, "comment"),
-      orderBy("createdAt"),
-      limit(1)
-    );
-    const querySnapshot = await getDocs(queryTask);
-    let tempComments: Array<commentDisplayType> = [];
-    querySnapshot.forEach((comment) => {
-      if (comment.id !== null) {
-        const newCommentObject = createCommentObject(comment);
-        tempComments.push(newCommentObject);
-        setFirstFetchCommentDone(true);
-      }
-    });
-    setComments(tempComments);
-  }, [createCommentObject, props.post.idPost]);
+    try {
+      const queryTask = query(
+        collection(db, "comments", props.post.idPost, "comment"),
+        orderBy("createdAt"),
+        limit(1)
+      );
+      const querySnapshot = await getDocs(queryTask);
+      let tempComments: Array<commentDisplayType> = [];
+      querySnapshot.forEach((comment) => {
+        if (comment.id !== null) {
+          const newCommentObject = createCommentDisplayObject(comment);
+          tempComments.push(newCommentObject);
+          setIsFirstFetchCommentDone(true);
+        }
+      });
+      setComments(tempComments);
+    } catch (error) {}
+  }, [createCommentDisplayObject, props.post.idPost]);
 
   const addNewComment = useCallback((id: string, newComment: commentDisplayType) => {
-    setIdNewComments((prevState) => [...prevState, id]);
-    setComments((prevState) => [...prevState, newComment]);
+    try {
+      setIdNewComments((prevState) => [...prevState, id]);
+      setComments((prevState) => [...prevState, newComment]);
+    } catch (error) {}
   }, []);
 
   const changePendingStatus = useCallback((key: string, isPending: boolean) => {
-    setComments((prevState) => {
-      const newState = prevState.map((comment) => {
-        if (comment.id === key) {
-          return { ...comment, isPending: isPending };
-        }
-        return comment;
+    try {
+      setComments((prevState) => {
+        const newState = prevState.map((comment) => {
+          if (comment.id === key) {
+            return { ...comment, isPending: isPending };
+          }
+          return comment;
+        });
+        return newState;
       });
-      return newState;
-    });
-    setHelpTrigger((prevState) => !prevState);
+      setHelpTrigger((prevState) => !prevState);
+    } catch (error) {}
   }, []);
 
   useEffect(() => {
-    if (firstFetchCommentDone === false) {
-      firstFetchComment();
+    if (!isfirstFetchCommentDone) {
+      // firstFetchComment();
     }
-  }, [firstFetchComment, firstFetchCommentDone, userSnapshot]);
+  }, [firstFetchComment, isfirstFetchCommentDone, userSnapshot]);
+
+  useEffect(() => {
+    handleTotalReactPost();
+  }, [handleTotalReactPost, props.post]);
 
   return (
     <div className="post mb-10 w-600 rounded-md border-0 border-gray-400 bg-white p-5 shadow-sm shadow-slate-400">
@@ -130,23 +153,17 @@ function PostCard(props: propsType) {
         props.post.contentType !== null &&
         props.post.accessType !== undefined && <ContentPost />}
 
-      <ReactPost
-        totalReact={totalReact}
-        reactTotalLike={props.post.reactTotalLike}
-        reactTotalLove={props.post.reactTotalLove}
-        reactTotalCare={props.post.reactTotalCare}
-        reactTotalHaha={props.post.reactTotalHaha}
-        reactTotalWow={props.post.reactTotalWow}
-        reactTotalSad={props.post.reactTotalSad}
-        reactTotalAngry={props.post.reactTotalAngry}
-      />
-
-      <ButtonAction
-        userId={props.userId}
-        // handleAddLike={handleAddLike}
-        // handleRemoveLike={handleRemoveLike}
-        loadingProcessReact={loadingProcessReact}
-      />
+      {totalReactPost === null ? (
+        <div className="flex justify-center">
+          <img src={process.env.PUBLIC_URL + "./loading_blue.gif"} alt="" className="h-6 w-6" />
+        </div>
+      ) : (
+        <ReactPost
+          totalReactPost={totalReactPost}
+          idPost={props.post.idPost}
+          idUser={props.userId}
+        />
+      )}
 
       <InputComment
         userId={props.userId}

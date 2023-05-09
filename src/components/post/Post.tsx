@@ -1,8 +1,6 @@
 import {
   collection,
-  doc,
   DocumentData,
-  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -11,12 +9,11 @@ import {
   startAfter,
   where,
 } from "firebase/firestore";
-import { createRef, useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
-import { postType, reactTypeOption } from "../../constants/EntityType";
+import { postType } from "../../constants/EntityType";
 import PostCard from "./PostCard";
 import { db } from "../../lib/firebase";
-import { reactPostsType } from "../../constants/PostComponentType";
 
 export default function Post() {
   console.log("====== RE-RENDER POST ======");
@@ -26,7 +23,6 @@ export default function Post() {
   const [lastVisible, setLastVisible] = useState<
     QueryDocumentSnapshot<DocumentData> | null | undefined
   >(null);
-  const [reactPosts, setReactPosts] = useState<reactPostsType | null | undefined>(null);
   const [isFirstFetchPostsDone, setIsFirstFetchPostsDone] = useState(false);
   const [errorFetch, setErrorFetch] = useState(false);
   const [fetchOnProgress, setFetchOnProgress] = useState(false);
@@ -46,52 +42,23 @@ export default function Post() {
       contentType: post.data().contentType,
       contentAttachment: post.data().contentAttachment,
       accessType: post.data().accessType,
-      reactTotalLike: post.data().reactTotalLike
-        ? parseInt(post.data().reactTotalLike.toString())
-        : 0,
-      reactTotalLove: post.data().reactTotalLove
-        ? parseInt(post.data().reactTotalLove.toString())
-        : 0,
-      reactTotalCare: post.data().reactTotalCare
-        ? parseInt(post.data().reactTotalCare.toString())
-        : 0,
-      reactTotalHaha: post.data().reactTotalHaha
-        ? parseInt(post.data().reactTotalHaha.toString())
-        : 0,
-      reactTotalWow: post.data().reactTotalWow ? parseInt(post.data().reactTotalWow.toString()) : 0,
-      reactTotalSad: post.data().reactTotalSad ? parseInt(post.data().reactTotalSad.toString()) : 0,
-      reactTotalAngry: post.data().reactTotalAngry
-        ? parseInt(post.data().reactTotalAngry.toString())
-        : 0,
+      reactTotalLike: post.data().reactTotalLike ?? 0,
+      reactTotalLove: post.data().reactTotalLove ?? 0,
+      reactTotalCare: post.data().reactTotalCare ?? 0,
+      reactTotalHaha: post.data().reactTotalHaha ?? 0,
+      reactTotalWow: post.data().reactTotalWow ?? 0,
+      reactTotalSad: post.data().reactTotalSad ?? 0,
+      reactTotalAngry: post.data().reactTotalAngry ?? 0,
+      reactTotal:
+        (post.data().reactTotalLike ?? 0) +
+        (post.data().reactTotalLove ?? 0) +
+        (post.data().reactTotalCare ?? 0) +
+        (post.data().reactTotalHaha ?? 0) +
+        (post.data().reactTotalWow ?? 0) +
+        (post.data().reactTotalSad ?? 0) +
+        (post.data().reactTotalAngry ?? 0),
     };
     return tempPost;
-  };
-
-  const queryReactPost = async () => {
-    try {
-      setErrorFetch(false);
-      setFetchOnProgress(true);
-      const docRef = doc(db, "userReactPosts", tempUid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const tempObj = {
-          like: docSnap.data().like,
-          love: docSnap.data().love,
-          care: docSnap.data().care,
-          haha: docSnap.data().haha,
-          wow: docSnap.data().wow,
-          sad: docSnap.data().sad,
-          angry: docSnap.data().angry,
-        };
-        setReactPosts(tempObj);
-      } else {
-        setReactPosts(undefined);
-      }
-      isFirstFetchPostsDone === false && firstQueryPosts();
-    } catch (error) {
-      setErrorFetch(true);
-      setFetchOnProgress(false);
-    }
   };
 
   // FIRST QUERY POSTS
@@ -178,24 +145,22 @@ export default function Post() {
   }, [fetchOnProgress, isFirstFetchPostsDone]);
 
   useEffect(() => {
-    window.addEventListener("scroll", checkEndScroll);
-    return () => {
-      window.removeEventListener("scroll", checkEndScroll);
-    };
+    // window.addEventListener("scroll", checkEndScroll);
+    // return () => {
+    //   window.removeEventListener("scroll", checkEndScroll);
+    // };
   }, [checkEndScroll]);
 
   useEffect(() => {
     if (auth !== null && auth !== undefined) {
-      queryReactPost();
+      !isFirstFetchPostsDone && firstQueryPosts();
     }
   }, [auth]);
 
   return (
     <div>
       {posts.map((post) => {
-        return (
-          <PostCard key={post.idPost} post={post} userId={auth!!.uid!!} reactPosts={reactPosts} />
-        );
+        return <PostCard key={post.idPost} post={post} userId={auth!!.uid!!} />;
       })}
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { createRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { userType } from "./constants/EntityType";
 import { AuthContext } from "./contexts/AuthContext";
@@ -8,7 +8,6 @@ import Dashboard from "./pages/Dashboard";
 import Loading from "./pages/Loading";
 import { SignIn } from "./pages/SignIn";
 import { Routes, Route, Navigate } from "react-router-dom";
-import ProtectedRoute from "./helpers/protectedRoute";
 import { db } from "./lib/firebase";
 import { User, getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -19,7 +18,6 @@ export default function App() {
   const [authUser, setAuthUser] = useState<User | undefined | null>(undefined);
   const [userSnapshot, setUserSnapshot] = useState<userType | undefined | null>(undefined);
   const [isLoading, setIsLoading] = useState(true);
-  const [firstRoute] = useState<null | String>(null);
 
   const checkAuthUserExist = (_authUser: User | null | undefined): boolean => {
     if (authUser !== null && authUser !== undefined) {
@@ -67,20 +65,8 @@ export default function App() {
     return () => listener();
   }, [auth]);
 
-  const ref: React.RefObject<HTMLDivElement> = createRef();
-
-  const handleScroll = (element: React.RefObject<HTMLDivElement>) => {
-    const bottom =
-      Math.abs(
-        element.current!.scrollHeight - element.current!.clientHeight - element.current!.scrollTop
-      ) < 1;
-    if (bottom) {
-      console.log("end scroll");
-    }
-  };
-
   return (
-    <div className="App w-full overflow-y-scroll" ref={ref} onScroll={() => console.log("hello")}>
+    <div className="App w-full overflow-y-scroll">
       <AuthContext.Provider value={authUser}>
         <UserContext.Provider value={userSnapshot}>
           <BrowserRouter>

@@ -132,7 +132,7 @@ function Comment(props: propsType) {
   return (
     <Fragment>
       {userProfile !== null && hideComment === false && (
-        <div className=" group mt-3 flex">
+        <div className="group mt-3 flex">
           <CommentPhotoProfile isQueryError={errorEdit} />
           {!editCommentMode ? (
             <span className=" flex flex-col">
