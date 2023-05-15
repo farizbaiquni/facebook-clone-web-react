@@ -137,7 +137,7 @@ function PostCard(props: propsType) {
 
   useEffect(() => {
     if (!isfirstFetchCommentDone) {
-      // firstFetchComment();
+      firstFetchComment();
     }
   }, [firstFetchComment, isfirstFetchCommentDone, userSnapshot]);
 

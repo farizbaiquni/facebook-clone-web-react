@@ -5,6 +5,7 @@ import { db } from "../../lib/firebase";
 import ModalDeleteComment from "./ModalDeleteComment";
 import CommentPhotoProfile from "./CommentPhotoProfile";
 import { OwnCommentOptionMenu } from "./CommentOptionMenu";
+import InputCommentReply from "./InputCommentReply";
 
 type propsType = {
   comment: commentDisplayType;
@@ -135,7 +136,7 @@ function Comment(props: propsType) {
         <div className="group mt-3 flex">
           <CommentPhotoProfile isQueryError={errorEdit} />
           {!editCommentMode ? (
-            <span className=" flex flex-col">
+            <span className=" flex w-full flex-col">
               <div className="flex items-center">
                 <span
                   className={`flex flex-col rounded-2xl border-[1px] bg-gray-100 px-3 py-2 ${
@@ -201,6 +202,8 @@ function Comment(props: propsType) {
                     </Fragment>
                   ))}
               </span>
+
+              <InputCommentReply />
             </span>
           ) : (
             <div className=" flex flex-col items-start">
