@@ -1,5 +1,5 @@
 import { Timestamp, collection, addDoc } from "firebase/firestore";
-import { commentAttachmentType, commentDisplayType, commentType } from "../../constants/EntityType";
+import { commentAttachmentEnum, commentDisplayType, commentType } from "../../constants/EntityType";
 import { db } from "../../lib/firebase";
 import { v4 as uuidv4 } from "uuid";
 import { memo, useState } from "react";
@@ -8,17 +8,16 @@ type propsType = {
   userId: string;
   idPost: string;
   addNewComment: (id: string, comment: commentDisplayType) => void;
-  changePendingStatus: (key: string, isPending: boolean) => void;
+  changePendingStatus: (previousId: string, newId: string, isPending: boolean) => void;
 };
 
 function InputComment(props: propsType) {
   const [text, setText] = useState<string>("");
-  const [attachmentType] = useState<commentAttachmentType>("text-only");
+  const [attachmentType] = useState<commentAttachmentEnum>(commentAttachmentEnum.TextOnly);
 
   const createCommentObject = (): commentType => {
     const object: commentType = {
       idUser: props.userId,
-      replyCommentId: null,
       text: text,
       attachments: [],
       attachmentType: attachmentType,
@@ -41,7 +40,6 @@ function InputComment(props: propsType) {
     const object: commentDisplayType = {
       id: uuid,
       idPost: props.idPost,
-      replyCommentId: null,
       idUser: props.userId,
       text: text,
       attachments: [],
@@ -71,7 +69,7 @@ function InputComment(props: propsType) {
       props.addNewComment(newCommentDisplayObject.id, newCommentDisplayObject);
       await addDoc(commentsRef, newCommentObject)
         .then((doc) => {
-          props.changePendingStatus(newCommentDisplayObject.id, false);
+          props.changePendingStatus(newCommentDisplayObject.id, doc.id, false);
         })
         .catch((e) => console.log("error"));
     }

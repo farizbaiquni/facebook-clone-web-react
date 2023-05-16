@@ -41,7 +41,13 @@ export type postType = {
   reactTotal: number;
 };
 
-export type commentAttachmentType = "text-only" | "photo" | "video" | "gif" | "sticker";
+export enum commentAttachmentEnum {
+  TextOnly,
+  Photo,
+  Video,
+  Gif,
+  Sticker,
+}
 export const commentAttachmentTypeOption = {
   text: "text-only",
   photo: "photo",
@@ -57,10 +63,9 @@ export enum radioGenderOption {
 
 export type commentType = {
   idUser: string;
-  replyCommentId: string | null;
   text: string;
   attachments: string[] | null;
-  attachmentType: string;
+  attachmentType: commentAttachmentEnum;
   createdAt: Timestamp;
   reactTotalReply: number;
   reactTotalLike: number;
@@ -76,11 +81,52 @@ export type commentType = {
 export type commentDisplayType = {
   id: string;
   idPost: string;
-  replyCommentId: string | null;
   idUser: string;
   text: string;
   attachments: string[] | null;
-  attachmentType: string;
+  attachmentType: commentAttachmentEnum;
+  createdAt: Timestamp;
+  reactTotalReply: number;
+  reactTotalLike: number;
+  reactTotalLove: number;
+  reactTotalCare: number;
+  reactTotalHaha: number;
+  reactTotalWow: number;
+  reactTotalSad: number;
+  reactTotalAngry: number;
+  totalReact: number;
+  isPending: boolean;
+  totalReply: number;
+};
+
+export type commentReplyType = {
+  idUser: string;
+  replyCommentId: string;
+  replyCommentIdUser: string;
+  text: string;
+  attachments: string[] | null;
+  attachmentType: commentAttachmentEnum;
+  createdAt: Timestamp;
+  reactTotalReply: number;
+  reactTotalLike: number;
+  reactTotalLove: number;
+  reactTotalCare: number;
+  reactTotalHaha: number;
+  reactTotalWow: number;
+  reactTotalSad: number;
+  reactTotalAngry: number;
+  totalReply: number;
+};
+
+export type commentDisplayReplyType = {
+  id: string;
+  idPost: string;
+  idUser: string;
+  replyCommentId: string;
+  replyCommentIdUser: string;
+  text: string;
+  attachments: string[] | null;
+  attachmentType: commentAttachmentEnum;
   createdAt: Timestamp;
   reactTotalReply: number;
   reactTotalLike: number;

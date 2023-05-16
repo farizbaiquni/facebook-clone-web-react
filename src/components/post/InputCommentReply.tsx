@@ -1,10 +1,110 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
+import {
+  commentAttachmentEnum,
+  commentDisplayReplyType,
+  commentReplyType,
+} from "../../constants/EntityType";
+import { v4 as uuidv4 } from "uuid";
+import { Timestamp, doc, increment, writeBatch } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
-function InputCommentReply() {
+type PropsType = {
+  idUser: string;
+  replyCommentId: string;
+  replyCommentIdUser: string;
+  idPost: string;
+  addNewComment: (id: string, comment: commentDisplayReplyType) => void;
+  changePendingStatus: (previusId: string, newId: string, isPending: boolean) => void;
+};
+
+function InputCommentReply(props: PropsType) {
   const imageMimeType = /image\/(png|jpg|jpeg)/i;
 
+  const [text, setText] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [fileDataURL, setFileDataURL] = useState<string | null>(null);
+
+  const [attachmentType, setAttachmentType] = useState<commentAttachmentEnum>(
+    commentAttachmentEnum.TextOnly
+  );
+
+  const createCommentReplyObject = (): commentReplyType => {
+    const object: commentReplyType = {
+      idUser: props.idUser,
+      replyCommentId: props.replyCommentId,
+      replyCommentIdUser: props.replyCommentIdUser,
+      text: text,
+      attachments: [],
+      attachmentType: attachmentType,
+      createdAt: Timestamp.now(),
+      reactTotalReply: 0,
+      reactTotalLike: 0,
+      reactTotalLove: 0,
+      reactTotalCare: 0,
+      reactTotalHaha: 0,
+      reactTotalWow: 0,
+      reactTotalSad: 0,
+      reactTotalAngry: 0,
+      totalReply: 0,
+    };
+    return object;
+  };
+
+  const createCommenDisplaytReplyObject = (): commentDisplayReplyType => {
+    const uuid = uuidv4();
+    const object: commentDisplayReplyType = {
+      id: uuid,
+      idPost: props.idPost,
+      idUser: props.idUser,
+      replyCommentId: props.replyCommentId,
+      replyCommentIdUser: props.replyCommentIdUser,
+      text: text,
+      attachments: [],
+      attachmentType: attachmentType,
+      createdAt: Timestamp.now(),
+      reactTotalReply: 0,
+      reactTotalLike: 0,
+      reactTotalLove: 0,
+      reactTotalCare: 0,
+      reactTotalHaha: 0,
+      reactTotalWow: 0,
+      reactTotalSad: 0,
+      reactTotalAngry: 0,
+      totalReact: 0,
+      isPending: true,
+      totalReply: 0,
+    };
+    return object;
+  };
+
+  const handleAddComment = async (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.code === "Enter") {
+      try {
+        const batch = writeBatch(db);
+        const commentsRef = doc(db, "comments", props.idPost, "comment", props.replyCommentId);
+        const commentsReplyRef = doc(
+          db,
+          "comments",
+          props.idPost,
+          "commentReply",
+          props.replyCommentId
+        );
+        const newCommentReplyObject = createCommentReplyObject();
+        const newCommentDisplayReplyObject = createCommenDisplaytReplyObject();
+        setText("");
+        props.addNewComment(newCommentDisplayReplyObject.id, newCommentDisplayReplyObject);
+        batch.update(commentsRef, "totalReply", increment(1));
+        batch.set(commentsReplyRef, newCommentReplyObject);
+        await batch
+          .commit()
+          .then((doc) =>
+            props.changePendingStatus(newCommentDisplayReplyObject.id, commentsReplyRef.id, false)
+          );
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
 
   const changeHandler = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0];
@@ -24,6 +124,7 @@ function InputCommentReply() {
     let fileReader: FileReader | null;
     let isCancel = false;
 
+    //Get input image f
     if (file) {
       fileReader = new FileReader();
       fileReader.onload = (e) => {
@@ -53,9 +154,12 @@ function InputCommentReply() {
       <div className="flex w-full flex-col">
         <div className="flex flex-1 flex-col rounded-xl bg-gray-100 px-3 py-2 focus:outline-none">
           <input
+            value={text}
             type="text"
             placeholder="Write a comment..."
             className="mt-2 h-full w-full bg-gray-100 focus:outline-none"
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleAddComment}
           />
 
           <div className="mb-2 mt-5 flex justify-between">
@@ -122,4 +226,4 @@ function InputCommentReply() {
   );
 }
 
-export default InputCommentReply;
+export default memo(InputCommentReply);

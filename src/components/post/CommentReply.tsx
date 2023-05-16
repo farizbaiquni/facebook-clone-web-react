@@ -10,13 +10,13 @@ import ModalDeleteComment from "./ModalDeleteComment";
 import CommentPhotoProfile from "./CommentPhotoProfile";
 import { OwnCommentOptionMenu } from "./CommentOptionMenu";
 import InputCommentReply from "./InputCommentReply";
-import CommentReply from "./CommentReply";
+import CommentReplyOfReply from "./CommentReplyOfReply";
 
 type propsType = {
-  comment: commentDisplayType;
+  comment: commentDisplayReplyType;
 };
 
-function Comment(props: propsType) {
+function CommentReply(props: propsType) {
   const [helpTrigger, setHelpTrigger] = useState(false);
   const [userProfile, setUserProfile] = useState<userProfileType | null>(null);
   const [editText, setEditText] = useState<string>(props.comment.text);
@@ -211,6 +211,7 @@ function Comment(props: propsType) {
                   </div>
                 )}
               </div>
+
               <span className="mt-1 flex px-3">
                 {errorEdit ||
                   (errorDelete ? (
@@ -245,7 +246,12 @@ function Comment(props: propsType) {
               </span>
 
               {commentsReply.map((comment, index) => (
-                <CommentReply key={comment.id} comment={comment} />
+                <CommentReplyOfReply
+                  key={comment.id}
+                  comment={comment}
+                  addNewComment={addNewComment}
+                  changePendingStatus={changePendingStatus}
+                />
               ))}
 
               {isShowInputCommentReply && (
@@ -286,6 +292,10 @@ function Comment(props: propsType) {
         </div>
       )}
 
+      {commentsReply.map((comment, index) => (
+        <CommentReply key={comment.id} comment={comment} />
+      ))}
+
       {showDeleteModal && (
         <ModalDeleteComment
           onChageShowDeleteModal={onChageShowDeleteModal}
@@ -296,4 +306,4 @@ function Comment(props: propsType) {
   );
 }
 
-export default memo(Comment);
+export default memo(CommentReply);

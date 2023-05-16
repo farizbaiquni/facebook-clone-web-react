@@ -29,12 +29,12 @@ function PostCard(props: propsType) {
   console.log("====== RE-RENDER CARD POST - " + props.post.textPost + " ======");
 
   const userSnapshot = useContext(UserContext);
-  const [idNewComments, setIdNewComments] = useState<Array<string>>([]);
   const [helpTrigger, setHelpTrigger] = useState(false);
-
   const [totalReactPost, setTotalReactPost] = useState<totalReactPostType | null>(null);
   const [isfirstFetchCommentDone, setIsFirstFetchCommentDone] = useState(false);
+
   const [comments, setComments] = useState<Array<commentDisplayType>>([]);
+  const [idNewComments, setIdNewComments] = useState<Array<string>>([]);
 
   let headerPost: headerPostType = {
     username: `${userSnapshot?.firstName} ${userSnapshot?.lastName}`,
@@ -48,7 +48,6 @@ function PostCard(props: propsType) {
         id: comment.id,
         idPost: props.post.idPost,
         idUser: comment.data().idUser,
-        replyCommentId: comment.data().replyCommentId,
         text: comment.data().text ?? "",
         attachments: comment.data().attachments,
         attachmentType: comment.data().attachmentType,
@@ -120,20 +119,23 @@ function PostCard(props: propsType) {
     } catch (error) {}
   }, []);
 
-  const changePendingStatus = useCallback((key: string, isPending: boolean) => {
-    try {
-      setComments((prevState) => {
-        const newState = prevState.map((comment) => {
-          if (comment.id === key) {
-            return { ...comment, isPending: isPending };
-          }
-          return comment;
+  const changePendingStatus = useCallback(
+    (previousId: string, newId: string, isPending: boolean) => {
+      try {
+        setComments((prevState) => {
+          const newState = prevState.map((comment) => {
+            if (comment.id === previousId) {
+              return { ...comment, id: newId, isPending: isPending };
+            }
+            return comment;
+          });
+          return newState;
         });
-        return newState;
-      });
-      setHelpTrigger((prevState) => !prevState);
-    } catch (error) {}
-  }, []);
+        setHelpTrigger((prevState) => !prevState);
+      } catch (error) {}
+    },
+    []
+  );
 
   useEffect(() => {
     if (!isfirstFetchCommentDone) {

@@ -1,31 +1,25 @@
 import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { createRef, Fragment, memo, useCallback, useEffect, useState } from "react";
-import {
-  commentDisplayReplyType,
-  commentDisplayType,
-  userProfileType,
-} from "../../constants/EntityType";
+import { commentDisplayReplyType, userProfileType } from "../../constants/EntityType";
 import { db } from "../../lib/firebase";
 import ModalDeleteComment from "./ModalDeleteComment";
 import CommentPhotoProfile from "./CommentPhotoProfile";
 import { OwnCommentOptionMenu } from "./CommentOptionMenu";
 import InputCommentReply from "./InputCommentReply";
-import CommentReply from "./CommentReply";
 
 type propsType = {
-  comment: commentDisplayType;
+  comment: commentDisplayReplyType;
+  addNewComment: (id: string, comment: commentDisplayReplyType) => void;
+  changePendingStatus: (previousId: string, newId: string, isPending: boolean) => void;
 };
 
-function Comment(props: propsType) {
-  const [helpTrigger, setHelpTrigger] = useState(false);
+function CommentReplyOfReplay(props: propsType) {
   const [userProfile, setUserProfile] = useState<userProfileType | null>(null);
   const [editText, setEditText] = useState<string>(props.comment.text);
   const [isTextEdited, setIsTextEdited] = useState(false);
   const [hideComment, setHideComment] = useState(false);
 
   const [isShowInputCommentReply, setIsShowInputCommentReply] = useState(false);
-  const [commentsReply, setCommentsReply] = useState<Array<commentDisplayReplyType>>([]);
-  const [idNewCommentsReply, setIdNewCommentsReply] = useState<Array<string>>([]);
 
   const [editCommentMode, setEditCommentMode] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -125,31 +119,6 @@ function Comment(props: propsType) {
     } catch (error) {}
   };
 
-  const addNewComment = useCallback((id: string, newComment: commentDisplayReplyType) => {
-    try {
-      setIdNewCommentsReply((prevState) => [...prevState, id]);
-      setCommentsReply((prevState) => [...prevState, newComment]);
-    } catch (error) {}
-  }, []);
-
-  const changePendingStatus = useCallback(
-    (previousId: string, newId: string, isPending: boolean) => {
-      try {
-        setCommentsReply((prevState) => {
-          const newState = prevState.map((comment) => {
-            if (comment.id === previousId) {
-              return { ...comment, id: newId, isPending: isPending };
-            }
-            return comment;
-          });
-          return newState;
-        });
-        setHelpTrigger((prevState) => !prevState);
-      } catch (error) {}
-    },
-    []
-  );
-
   useEffect(() => {
     fetchUserProfile();
   }, [fetchUserProfile]);
@@ -211,6 +180,7 @@ function Comment(props: propsType) {
                   </div>
                 )}
               </div>
+
               <span className="mt-1 flex px-3">
                 {errorEdit ||
                   (errorDelete ? (
@@ -244,18 +214,14 @@ function Comment(props: propsType) {
                   ))}
               </span>
 
-              {commentsReply.map((comment, index) => (
-                <CommentReply key={comment.id} comment={comment} />
-              ))}
-
               {isShowInputCommentReply && (
                 <InputCommentReply
                   idUser={props.comment.idUser}
                   replyCommentId={props.comment.id}
                   replyCommentIdUser={props.comment.idUser}
                   idPost={props.comment.idPost}
-                  addNewComment={addNewComment}
-                  changePendingStatus={changePendingStatus}
+                  addNewComment={props.addNewComment}
+                  changePendingStatus={props.changePendingStatus}
                 />
               )}
             </span>
@@ -296,4 +262,4 @@ function Comment(props: propsType) {
   );
 }
 
-export default memo(Comment);
+export default memo(CommentReplyOfReplay);
